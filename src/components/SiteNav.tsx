@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, NavLink } from "react-router-dom";
 
 export function SiteNav() {
   return (
@@ -11,23 +11,27 @@ export function SiteNav() {
           rk.
         </Link>
         <div className="flex items-center gap-6 text-sm">
-          <Link
+          <NavLink
             to="/"
-            activeOptions={{ exact: true }}
-            activeProps={{ className: "text-foreground" }}
-            inactiveProps={{ className: "text-muted-foreground" }}
-            className="relative transition-colors hover:text-foreground"
+            end
+            className={({ isActive }) =>
+              `relative transition-colors hover:text-foreground ${
+                isActive ? "text-foreground" : "text-muted-foreground"
+              }`
+            }
           >
             Home
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/newsletter"
-            activeProps={{ className: "text-foreground" }}
-            inactiveProps={{ className: "text-muted-foreground" }}
-            className="relative transition-colors hover:text-foreground"
+            className={({ isActive }) =>
+              `relative transition-colors hover:text-foreground ${
+                isActive ? "text-foreground" : "text-muted-foreground"
+              }`
+            }
           >
             Newsletter
-          </Link>
+          </NavLink>
         </div>
       </nav>
     </header>
