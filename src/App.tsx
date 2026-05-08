@@ -200,12 +200,12 @@ function SignupPage() {
           <iframe
             title="Brevo signup form"
             width="100%"
-            height="420"
+            height="680"
             src="https://ec954df0.sibforms.com/serve/MUIFAD-KhSiskQ-zzFycjRMfxHFcxfXG9f9U4dN06yByW-GhK05yP33OnUcUL-gkl19lxI60LWfaM0OnH0C0Tmn71Ta3R2LJ-5UOnS8oBVlCirhaS-85n4jLc45sQg97EOphELb2CpZ2FQW6sKxIBddTP_2Z5R7_f_FOSg0uj7fBa7LffFmQYZrFBBNubHyvK9cR4MOC5ElGFDV45g=="
             frameBorder="0"
             scrolling="no"
             allowFullScreen
-            className="mx-auto block w-full max-w-[540px]"
+            className="mx-auto block h-[clamp(560px,82vh,760px)] w-full max-w-[540px] sm:h-[clamp(420px,65vh,620px)]"
             style={{ border: 0 }}
           />
         </div>
