@@ -1,10 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
 :root {
   color-scheme: light;
-  --bg: #f8f6f1;
-  --surface: #fffdf8;
-  --text: #1f1d1a;
-  --muted: #6b665e;
-  --border: rgba(31, 29, 26, 0.12);
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --text: #2a2a2a;
+  --muted: #737373;
+  --border: #e5e7eb;
 }
 
 * {
@@ -14,15 +16,15 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Georgia", "Times New Roman", serif;
-  background:
-    radial-gradient(circle at top, rgba(151, 125, 93, 0.14), transparent 32%),
-    var(--bg);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: var(--bg);
   color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 main {
-  width: min(100%, 44rem);
+  width: min(100%, 36rem);
   margin: 0 auto;
   padding: 2.5rem 1.5rem 6rem;
 }
@@ -51,8 +53,10 @@ a {
 
 h1 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 2.7rem);
-  line-height: 1.1;
+  font-size: clamp(1.875rem, 5vw, 2.25rem);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
 .hero p {
@@ -65,11 +69,8 @@ h1 {
 
 .card {
   margin-top: 2.5rem;
-  padding: 1.5rem;
-  border: 1px solid var(--border);
-  border-radius: 1.5rem;
+  padding: 1.5rem 0;
   background: var(--surface);
-  box-shadow: 0 18px 40px rgba(31, 29, 26, 0.06);
 }
 
 iframe {
@@ -91,9 +92,5 @@ iframe {
 @media (max-width: 640px) {
   main {
     padding-top: 1.5rem;
-  }
-
-  .card {
-    padding: 1rem;
   }
 }
