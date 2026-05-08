@@ -23,7 +23,7 @@ export function SiteNav() {
             Home
           </NavLink>
           <a
-            href="/signup"
+            href="/signup/"
             className="relative text-muted-foreground transition-colors hover:text-foreground"
           >
             Newsletter

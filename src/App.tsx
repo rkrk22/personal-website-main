@@ -149,7 +149,7 @@ function HomePage() {
               Notes on game art, digital painting and the creative process.
             </p>
             <a
-              href="/signup"
+              href="/signup/"
               className="mt-5 inline-flex items-center justify-center rounded-md bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-opacity hover:opacity-90"
             >
               Sign up
