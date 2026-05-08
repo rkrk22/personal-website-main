@@ -22,16 +22,12 @@ export function SiteNav() {
           >
             Home
           </NavLink>
-          <NavLink
-            to="/newsletter"
-            className={({ isActive }) =>
-              `relative transition-colors hover:text-foreground ${
-                isActive ? "text-foreground" : "text-muted-foreground"
-              }`
-            }
+          <a
+            href="/signup"
+            className="relative text-muted-foreground transition-colors hover:text-foreground"
           >
             Newsletter
-          </NavLink>
+          </a>
         </div>
       </nav>
     </header>

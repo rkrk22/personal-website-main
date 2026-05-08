@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { Instagram, Youtube, Send, BookOpen, ExternalLink, ArrowLeft } from "lucide-react";
 import avatar from "@/assets/avatar.jpg";
 
@@ -148,12 +148,12 @@ function HomePage() {
             <p className="mt-2 max-w-sm text-sm text-background/70">
               Notes on game art, digital painting and the creative process.
             </p>
-            <Link
-              to="/signup"
+            <a
+              href="/signup"
               className="mt-5 inline-flex items-center justify-center rounded-md bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-opacity hover:opacity-90"
             >
               Sign up
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -246,10 +246,6 @@ function NotFoundPage() {
   );
 }
 
-function NewsletterRedirect() {
-  return <Navigate to="/signup" replace />;
-}
-
 export function App() {
   return (
     <>
@@ -257,7 +253,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/newsletter" element={<NewsletterRedirect />} />
+        <Route path="/newsletter" element={<SignupPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
