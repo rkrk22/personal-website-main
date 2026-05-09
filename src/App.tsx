@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
-import { Instagram, Youtube, Send, BookOpen, ExternalLink, ArrowLeft } from "lucide-react";
+import { Instagram, Youtube, Send, BookOpen, ExternalLink } from "lucide-react";
 import avatar from "@/assets/avatar.jpg";
 
 type MetaDefinition = {
@@ -165,58 +165,6 @@ function HomePage() {
   );
 }
 
-function SignupPage() {
-  usePageMeta({
-    title: "Signup — Ruslan Kim",
-    description:
-      "Subscribe for updates about game art, digital painting, books, courses, and creative process.",
-    ogTitle: "Signup — Ruslan Kim",
-    ogDescription:
-      "Updates about game art, digital painting, books, courses, and creative process.",
-  });
-
-  return (
-    <main className="mx-auto max-w-xl px-6 pb-24 pt-10 sm:pt-14">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </Link>
-
-      <section className="mt-10 text-center">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Sign up for updates</h1>
-        <p className="mx-auto mt-4 max-w-md text-base text-muted-foreground">
-          Updates about game art, digital painting, books, courses, and the creative process.
-        </p>
-      </section>
-
-      <section className="mt-10">
-        <div
-          id="brevo-form"
-          className="overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-8"
-        >
-          <iframe
-            title="Brevo signup form"
-            width="100%"
-            height="680"
-            src="https://ec954df0.sibforms.com/serve/MUIFAD-KhSiskQ-zzFycjRMfxHFcxfXG9f9U4dN06yByW-GhK05yP33OnUcUL-gkl19lxI60LWfaM0OnH0C0Tmn71Ta3R2LJ-5UOnS8oBVlCirhaS-85n4jLc45sQg97EOphELb2CpZ2FQW6sKxIBddTP_2Z5R7_f_FOSg0uj7fBa7LffFmQYZrFBBNubHyvK9cR4MOC5ElGFDV45g=="
-            frameBorder="0"
-            scrolling="no"
-            allowFullScreen
-            className="mx-auto block h-[clamp(560px,82vh,760px)] w-full max-w-[540px] sm:h-[clamp(420px,65vh,620px)]"
-            style={{ border: 0 }}
-          />
-        </div>
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          No spam. Unsubscribe anytime.
-        </p>
-      </section>
-    </main>
-  );
-}
-
 function NotFoundPage() {
   usePageMeta({
     title: "Page Not Found — Ruslan Kim",
@@ -252,8 +200,6 @@ export function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/newsletter" element={<SignupPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
