@@ -1,11 +1,11 @@
 # Standalone Pages
 
-Любая страница, которая должна открываться напрямую по URL без зависимости от React Router, хранится в `public/<slug>/index.html`.
+Любая страница, которая должна открываться напрямую по URL без зависимости от React Router, хранится в `<slug>/index.html` в корне проекта.
 
 Примеры:
 
-- `public/signup/index.html` -> `/signup/`
-- `public/newsletter/index.html` -> `/newsletter/`
+- `signup/index.html` -> `/signup/`
+- `newsletter/index.html` -> `/newsletter/`
 
 Чтобы быстро создать новую отдельную страницу:
 
@@ -16,7 +16,7 @@ npm run new:page -- about "About Ruslan Kim"
 После этого появится файл:
 
 ```text
-public/about/index.html
+about/index.html
 ```
 
 И страница будет доступна по адресу:
@@ -27,7 +27,7 @@ public/about/index.html
 
 Правило на будущее:
 
-- если страница должна жить как отдельная ссылка и открываться напрямую, создавай её в `public/<slug>/index.html`
+- если страница должна жить как отдельная ссылка и открываться напрямую, создавай её в `<slug>/index.html`
 - если это внутренняя навигация внутри SPA, можно оставлять её в React Router
 
 Основа для всех standalone pages:

@@ -22,7 +22,7 @@ if (!slug) {
 }
 
 const pageTitle = titleParts.length > 0 ? titleParts.join(" ").trim() : toTitle(slug);
-const outputDir = path.join(process.cwd(), "public", slug);
+const outputDir = path.join(process.cwd(), slug);
 const outputFile = path.join(outputDir, "index.html");
 
 if (fs.existsSync(outputFile)) {
@@ -75,7 +75,7 @@ function buildHtml({ slug, pageTitle }) {
 
       <section class="card">
         <p>Standalone page ready at <strong>/${escapeHtml(slug)}/</strong>.</p>
-        <p class="note">Edit public/${escapeHtml(slug)}/index.html to add the final content.</p>
+        <p class="note">Edit ${escapeHtml(slug)}/index.html to add the final content.</p>
       </section>
     </main>
   </body>
