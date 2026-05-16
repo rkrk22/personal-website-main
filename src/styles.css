@@ -151,3 +151,37 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+@layer components {
+  .markdown-content h1 {
+    @apply text-3xl font-semibold tracking-tight sm:text-4xl;
+  }
+
+  .markdown-content h2 {
+    @apply mt-8 text-2xl font-semibold tracking-tight;
+  }
+
+  .markdown-content h3 {
+    @apply mt-6 text-xl font-semibold tracking-tight;
+  }
+
+  .markdown-content p {
+    @apply mt-4 text-sm leading-7 text-muted-foreground sm:text-base;
+  }
+
+  .markdown-content ul {
+    @apply mt-4 list-disc space-y-2 pl-6 text-sm leading-7 text-muted-foreground sm:text-base;
+  }
+
+  .markdown-content a {
+    @apply text-foreground underline decoration-border underline-offset-4;
+  }
+
+  .markdown-content code {
+    @apply rounded bg-secondary px-1.5 py-0.5 text-[0.9em] text-foreground;
+  }
+
+  .markdown-content iframe {
+    @apply mt-6 max-w-full;
+  }
+}

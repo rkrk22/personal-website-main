@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -6,10 +6,15 @@ import {
   BookOpen,
   ExternalLink,
   Instagram,
+  Pencil,
+  RotateCcw,
   Send,
   Youtube,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import avatar from "@/assets/avatar.jpg";
+import bookGameArtGuidebookMarkdown from "@/content/book-game-art-guidebook.md?raw";
+import { markdownToHtml } from "@/lib/markdown";
 
 type MetaDefinition = {
   title: string;
@@ -44,7 +49,6 @@ function usePageMeta({ title, description, ogTitle, ogDescription }: MetaDefinit
   }, [description, ogDescription, ogTitle, title]);
 }
 
-// Simple TikTok glyph (lucide doesn't ship one)
 function TikTokIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -59,9 +63,6 @@ const socials = [
   { label: "YouTube", href: "https://youtube.com", Icon: Youtube },
   { label: "Telegram", href: "https://t.me", Icon: Send },
 ];
-
-const GAME_ART_GUIDEBOOK_WIDGET =
-  '<iframe title="lava.top" style="border: none" width="180" height="80" src="https://widget.lava.top/f2a9dff0-cd84-4dea-b309-52a51009fb50"></iframe>';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -115,7 +116,7 @@ function HomePage() {
 
       <section className="mt-12">
         <Link
-          to="/books/game-art-guidebook"
+          to="/books/game-art-guidebook/"
           className="group flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
         >
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary">
@@ -174,49 +175,233 @@ function HomePage() {
   );
 }
 
-function EmbedWidget({ code }: { code: string }) {
+type EditorMode = "preview" | "edit";
+const isLocalEditorEnabled = import.meta.env.DEV;
+
+function MarkdownEditor({
+  storageKey,
+  initialMarkdown,
+  filePath,
+}: {
+  storageKey: string;
+  initialMarkdown: string;
+  filePath: string;
+}) {
+  const [markdown, setMarkdown] = useState(() => {
+    if (typeof window === "undefined") {
+      return initialMarkdown;
+    }
+
+    return window.localStorage.getItem(storageKey) ?? initialMarkdown;
+  });
+  const [mode, setMode] = useState<EditorMode>("preview");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveMessage, setSaveMessage] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   useEffect(() => {
-    if (!code) {
+    window.localStorage.setItem(storageKey, markdown);
+  }, [markdown, storageKey]);
+
+  useEffect(() => {
+    if (saveState !== "saved") {
       return;
     }
 
-    const container = document.getElementById("book-widget-container");
+    const timeoutId = window.setTimeout(() => setSaveState("idle"), 1500);
+    return () => window.clearTimeout(timeoutId);
+  }, [saveState]);
 
-    if (!container) {
+  const updateMarkdown = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setMarkdown(event.target.value);
+  };
+
+  const wrapSelection = (before: string, after = "") => {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
       return;
     }
 
-    container.innerHTML = "";
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = markdown.slice(start, end);
+    const nextValue = markdown.slice(0, start) + before + selected + after + markdown.slice(end);
 
-    const template = document.createElement("template");
-    template.innerHTML = code.trim();
+    setMarkdown(nextValue);
 
-    Array.from(template.content.childNodes).forEach((node) => {
-      if (node.nodeName.toLowerCase() === "script") {
-        const oldScript = node as HTMLScriptElement;
-        const newScript = document.createElement("script");
+    window.requestAnimationFrame(() => {
+      textarea.focus();
+      const cursorStart = start + before.length;
+      const cursorEnd = cursorStart + selected.length;
+      textarea.setSelectionRange(cursorStart, cursorEnd);
+    });
+  };
 
-        Array.from(oldScript.attributes).forEach((attribute) => {
-          newScript.setAttribute(attribute.name, attribute.value);
-        });
+  const insertBlock = (block: string) => {
+    const textarea = textareaRef.current;
+    const insertion = `\n\n${block}\n\n`;
 
-        newScript.textContent = oldScript.textContent;
-        container.appendChild(newScript);
-        return;
+    if (!textarea) {
+      setMarkdown((current) => `${current}${insertion}`);
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const nextValue = markdown.slice(0, start) + insertion + markdown.slice(end);
+
+    setMarkdown(nextValue);
+
+    window.requestAnimationFrame(() => {
+      textarea.focus();
+      const position = start + insertion.length;
+      textarea.setSelectionRange(position, position);
+    });
+  };
+
+  const resetMarkdown = () => {
+    setMarkdown(initialMarkdown);
+    window.localStorage.removeItem(storageKey);
+    setSaveState("idle");
+    setSaveMessage("");
+  };
+
+  const saveMarkdown = async () => {
+    setSaveState("saving");
+    setSaveMessage("");
+
+    try {
+      const response = await fetch("/__save-markdown", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          filePath,
+          content: markdown,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Failed to save markdown");
       }
 
-      container.appendChild(node.cloneNode(true));
-    });
+      setSaveState("saved");
+      setSaveMessage("Saved to file");
+    } catch (error) {
+      setSaveState("error");
+      setSaveMessage(error instanceof Error ? error.message : "Failed to save markdown");
+    }
+  };
 
-    return () => {
-      container.innerHTML = "";
-    };
-  }, [code]);
+  if (!isLocalEditorEnabled) {
+    return (
+      <article
+        className="markdown-content rounded-3xl border border-border bg-card p-8 sm:p-10"
+        dangerouslySetInnerHTML={{ __html: markdownToHtml(initialMarkdown) }}
+      />
+    );
+  }
 
-  return <div id="book-widget-container" className="min-h-20" />;
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm font-semibold tracking-tight">Editor</div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={mode === "preview" ? "default" : "outline"}
+              onClick={() => setMode("preview")}
+            >
+              Preview
+            </Button>
+            <Button
+              variant={mode === "edit" ? "default" : "outline"}
+              onClick={() => setMode("edit")}
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+            <Button variant="outline" onClick={resetMarkdown}>
+              <RotateCcw className="h-4 w-4" />
+              Reset
+            </Button>
+            <Button onClick={saveMarkdown} disabled={saveState === "saving"}>
+              {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save"}
+            </Button>
+          </div>
+        </div>
+
+        {saveMessage ? (
+          <p
+            className={`mt-3 text-sm ${
+              saveState === "error" ? "text-destructive" : "text-muted-foreground"
+            }`}
+          >
+            {saveMessage}
+          </p>
+        ) : null}
+
+        {mode === "edit" ? (
+          <div className="mt-4 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => wrapSelection("**", "**")}>
+                Bold
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => wrapSelection("*", "*")}>
+                Italic
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => insertBlock("# Heading")}>
+                H1
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => insertBlock("## Section")}>
+                H2
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => insertBlock("- List item")}>
+                List
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => insertBlock("[Link text](https://example.com)")}
+              >
+                Link
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  insertBlock(
+                    '<iframe title="widget" style="border: none" width="180" height="80" src="https://example.com"></iframe>',
+                  )
+                }
+              >
+                Iframe
+              </Button>
+            </div>
+
+            <textarea
+              ref={textareaRef}
+              value={markdown}
+              onChange={updateMarkdown}
+              spellCheck={false}
+              className="min-h-[360px] w-full rounded-xl border border-border bg-background px-4 py-3 text-sm leading-7 outline-none ring-0"
+            />
+          </div>
+        ) : null}
+      </div>
+
+      <article
+        className="markdown-content rounded-3xl border border-border bg-card p-8 sm:p-10"
+        dangerouslySetInnerHTML={{ __html: markdownToHtml(markdown) }}
+      />
+    </div>
+  );
 }
 
-function BookPage() {
+export function BookPage() {
   usePageMeta({
     title: "Game Art Guidebook — Ruslan Kim",
     description:
@@ -236,32 +421,12 @@ function BookPage() {
         Back to home
       </Link>
 
-      <section className="mt-8 rounded-3xl border border-border bg-card p-8 sm:p-10">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-          <BookOpen className="h-6 w-6 text-foreground" />
-        </div>
-        <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Game Art Guidebook
-        </h1>
-        <p className="mt-3 text-lg text-muted-foreground">
-          A practical guide to a career in game art.
-        </p>
-        <div className="mt-8 space-y-4 text-sm leading-7 text-muted-foreground sm:text-base">
-          <p>
-            This page is prepared for the book overview, key takeaways, and purchase options. You
-            can replace this text with the final description of the book, who it is for, and what
-            readers will get from it.
-          </p>
-          <p>
-            Typical content here can include the structure of the book, topics covered, author
-            background, and a short note on how the guide helps aspiring game artists build their
-            portfolio and career path.
-          </p>
-        </div>
-      </section>
-
-      <section className="mt-8 rounded-3xl border border-border bg-card p-8 sm:p-10">
-        <EmbedWidget code={GAME_ART_GUIDEBOOK_WIDGET} />
+      <section className="mt-8">
+        <MarkdownEditor
+          storageKey="page:/books/game-art-guidebook"
+          initialMarkdown={bookGameArtGuidebookMarkdown}
+          filePath="src/content/book-game-art-guidebook.md"
+        />
       </section>
     </main>
   );
