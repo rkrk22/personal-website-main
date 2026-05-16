@@ -79,7 +79,10 @@ export default defineConfig({
       input: {
         main: path.resolve(rootDir, "index.html"),
         bookGameArtGuidebook: path.resolve(rootDir, "books/game-art-guidebook/index.html"),
+        privacyPolicy: path.resolve(rootDir, "privacy-policy/index.html"),
+        shop: path.resolve(rootDir, "shop/index.html"),
         signup: path.resolve(rootDir, "signup/index.html"),
+        termsOfService: path.resolve(rootDir, "terms-of-service/index.html"),
         newsletter: path.resolve(rootDir, "newsletter/index.html"),
       },
     },
