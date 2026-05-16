@@ -1,6 +1,14 @@
 import { useEffect } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
-import { Instagram, Youtube, Send, BookOpen, ExternalLink } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  ExternalLink,
+  Instagram,
+  Send,
+  Youtube,
+} from "lucide-react";
 import avatar from "@/assets/avatar.jpg";
 
 type MetaDefinition = {
@@ -51,6 +59,9 @@ const socials = [
   { label: "YouTube", href: "https://youtube.com", Icon: Youtube },
   { label: "Telegram", href: "https://t.me", Icon: Send },
 ];
+
+const GAME_ART_GUIDEBOOK_WIDGET =
+  '<iframe title="lava.top" style="border: none" width="180" height="80" src="https://widget.lava.top/f2a9dff0-cd84-4dea-b309-52a51009fb50"></iframe>';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -103,10 +114,8 @@ function HomePage() {
       </section>
 
       <section className="mt-12">
-        <a
-          href="https://example.com/book"
-          target="_blank"
-          rel="noreferrer"
+        <Link
+          to="/books/game-art-guidebook"
           className="group flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
         >
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary">
@@ -118,8 +127,8 @@ function HomePage() {
               A practical guide to a career in game art
             </div>
           </div>
-          <ExternalLink className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
-        </a>
+          <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+        </Link>
 
         <a
           href="https://example.com/portfolio"
@@ -165,6 +174,99 @@ function HomePage() {
   );
 }
 
+function EmbedWidget({ code }: { code: string }) {
+  useEffect(() => {
+    if (!code) {
+      return;
+    }
+
+    const container = document.getElementById("book-widget-container");
+
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML = "";
+
+    const template = document.createElement("template");
+    template.innerHTML = code.trim();
+
+    Array.from(template.content.childNodes).forEach((node) => {
+      if (node.nodeName.toLowerCase() === "script") {
+        const oldScript = node as HTMLScriptElement;
+        const newScript = document.createElement("script");
+
+        Array.from(oldScript.attributes).forEach((attribute) => {
+          newScript.setAttribute(attribute.name, attribute.value);
+        });
+
+        newScript.textContent = oldScript.textContent;
+        container.appendChild(newScript);
+        return;
+      }
+
+      container.appendChild(node.cloneNode(true));
+    });
+
+    return () => {
+      container.innerHTML = "";
+    };
+  }, [code]);
+
+  return <div id="book-widget-container" className="min-h-20" />;
+}
+
+function BookPage() {
+  usePageMeta({
+    title: "Game Art Guidebook — Ruslan Kim",
+    description:
+      "Game Art Guidebook by Ruslan Kim. Learn what a game artist does, how to build skills, and where to start your career path.",
+    ogTitle: "Game Art Guidebook — Ruslan Kim",
+    ogDescription:
+      "A practical guide to a career in game art, with an overview of the book and purchase options.",
+  });
+
+  return (
+    <main className="mx-auto max-w-3xl px-6 pb-24 pt-12 sm:pt-16">
+      <Link
+        to="/"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to home
+      </Link>
+
+      <section className="mt-8 rounded-3xl border border-border bg-card p-8 sm:p-10">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
+          <BookOpen className="h-6 w-6 text-foreground" />
+        </div>
+        <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">
+          Game Art Guidebook
+        </h1>
+        <p className="mt-3 text-lg text-muted-foreground">
+          A practical guide to a career in game art.
+        </p>
+        <div className="mt-8 space-y-4 text-sm leading-7 text-muted-foreground sm:text-base">
+          <p>
+            This page is prepared for the book overview, key takeaways, and purchase options. You
+            can replace this text with the final description of the book, who it is for, and what
+            readers will get from it.
+          </p>
+          <p>
+            Typical content here can include the structure of the book, topics covered, author
+            background, and a short note on how the guide helps aspiring game artists build their
+            portfolio and career path.
+          </p>
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-3xl border border-border bg-card p-8 sm:p-10">
+        <EmbedWidget code={GAME_ART_GUIDEBOOK_WIDGET} />
+      </section>
+    </main>
+  );
+}
+
 function NotFoundPage() {
   usePageMeta({
     title: "Page Not Found — Ruslan Kim",
@@ -200,6 +302,7 @@ export function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/books/game-art-guidebook" element={<BookPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
