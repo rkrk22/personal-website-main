@@ -72,6 +72,8 @@ const socials = [
 ];
 
 const featuredProducts = products.filter((product) => product.featuredOnHome);
+const iframeWidgetPattern =
+  /<iframe[^>]*src="([^"]+)"[^>]*><\/iframe>|<iframe[^>]*src="([^"]+)"[^>]*>/i;
 
 function ProductCard({
   title,
@@ -136,6 +138,38 @@ function ProductTile({
   );
 }
 
+function extractWidgetSource(markdown: string) {
+  const match = markdown.match(iframeWidgetPattern);
+  const widgetSrc = match?.[1] ?? match?.[2] ?? null;
+  const contentMarkdown = match ? markdown.replace(match[0], "").trim() : markdown;
+
+  return {
+    contentMarkdown,
+    widgetSrc,
+  };
+}
+
+function MarkdownContent({ markdown }: { markdown: string }) {
+  const { contentMarkdown, widgetSrc } = extractWidgetSource(markdown);
+
+  return (
+    <article className="markdown-content rounded-3xl border border-border bg-card p-8 sm:p-10">
+      <div dangerouslySetInnerHTML={{ __html: markdownToHtml(contentMarkdown) }} />
+      {widgetSrc ? (
+        <div className="mt-6">
+          <iframe
+            title="lava.top"
+            style={{ border: "none" }}
+            width="180"
+            height="80"
+            src={widgetSrc}
+          />
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
 function ScrollToTop() {
   const location = useLocation();
 
@@ -189,11 +223,14 @@ function LegalPage({
             <article key={section.heading}>
               <h2 className="text-xl font-semibold tracking-tight">{section.heading}</h2>
               <div className="mt-4 space-y-3">
-              {section.paragraphs.map((paragraph) => (
-                <p key={paragraph} className="text-sm leading-7 text-muted-foreground sm:text-base">
-                  {paragraph}
-                </p>
-              ))}
+                {section.paragraphs.map((paragraph) => (
+                  <p
+                    key={paragraph}
+                    className="text-sm leading-7 text-muted-foreground sm:text-base"
+                  >
+                    {paragraph}
+                  </p>
+                ))}
               </div>
             </article>
           ))}
@@ -318,7 +355,9 @@ const termsOfServiceSections: LegalSection[] = [
   },
   {
     heading: "Контакты",
-    paragraphs: ["Если у вас есть вопросы по этим Условиям использования, напишите на: squidcg@gmail.com"],
+    paragraphs: [
+      "Если у вас есть вопросы по этим Условиям использования, напишите на: squidcg@gmail.com",
+    ],
   },
   {
     heading: "Последнее обновление",
@@ -633,12 +672,7 @@ function MarkdownEditor({
   };
 
   if (!isLocalEditorEnabled) {
-    return (
-      <article
-        className="markdown-content rounded-3xl border border-border bg-card p-8 sm:p-10"
-        dangerouslySetInnerHTML={{ __html: markdownToHtml(initialMarkdown) }}
-      />
-    );
+    return <MarkdownContent markdown={initialMarkdown} />;
   }
 
   return (
@@ -756,10 +790,7 @@ function MarkdownEditor({
         ) : null}
       </div>
 
-      <article
-        className="markdown-content rounded-3xl border border-border bg-card p-8 sm:p-10"
-        dangerouslySetInnerHTML={{ __html: markdownToHtml(markdown) }}
-      />
+      <MarkdownContent markdown={markdown} />
     </div>
   );
 }
