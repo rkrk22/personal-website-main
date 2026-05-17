@@ -60,7 +60,7 @@
         background: rgba(255, 255, 255, 0.92);
       }
 
-      .next-steps strong {
+      .next-steps > strong {
         display: block;
         margin-bottom: 0.75rem;
         font-size: 0.95rem;
@@ -71,6 +71,10 @@
         padding-left: 1.1rem;
         color: var(--muted);
         line-height: 1.7;
+      }
+
+      .next-steps li + li {
+        margin-top: 1.6rem;
       }
 
       .actions {
@@ -142,7 +146,7 @@
         <div class="next-steps">
           <strong>Что дальше:</strong>
           <ul>
-            <li>Проверьте папку «Входящие» или «Промоакции», если ждёте первое письмо.</li>
+            <li>Проверьте папку «Входящие» или <strong>«Промоакции»</strong>, если ждёте первое письмо.</li>
             <li>Если письма нет, посмотрите папку «Спам» и добавьте отправителя в контакты.</li>
             <li>Иногда письмо приходит не сразу, а в течение нескольких минут.</li>
           </ul>
