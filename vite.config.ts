@@ -82,6 +82,7 @@ export default defineConfig({
         privacyPolicy: path.resolve(rootDir, "privacy-policy/index.html"),
         shop: path.resolve(rootDir, "shop/index.html"),
         signup: path.resolve(rootDir, "signup/index.html"),
+        newsletterThanks: path.resolve(rootDir, "newsletter-thanks/index.html"),
         termsOfService: path.resolve(rootDir, "terms-of-service/index.html"),
         newsletter: path.resolve(rootDir, "newsletter/index.html"),
       },
