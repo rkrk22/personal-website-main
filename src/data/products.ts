@@ -17,7 +17,7 @@ export const products: Product[] = [
     subtitle: "A practical guide to a career in game art",
     description:
       "A practical book for aspiring game artists about skills, direction, and building a path into the industry.",
-    href: "/books/game-art-guidebook/",
+    href: "/artist-kit/",
     kind: "Book",
     featuredOnHome: true,
     homeTitle: "Набор для выживания Digital художника",

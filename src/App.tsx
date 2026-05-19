@@ -866,6 +866,7 @@ export function App() {
         <Route path="/shop/" element={<ShopPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+        <Route path="/artist-kit/" element={<BookPage />} />
         <Route path="/books/game-art-guidebook" element={<BookPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

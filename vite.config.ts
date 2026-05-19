@@ -78,6 +78,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(rootDir, "index.html"),
+        artistKit: path.resolve(rootDir, "artist-kit/index.html"),
         bookGameArtGuidebook: path.resolve(rootDir, "books/game-art-guidebook/index.html"),
         privacyPolicy: path.resolve(rootDir, "privacy-policy/index.html"),
         shop: path.resolve(rootDir, "shop/index.html"),
