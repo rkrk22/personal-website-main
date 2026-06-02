@@ -38,4 +38,4 @@
 - Заменят ли художников. Поиск своего стиля
 - Заключение
 
-<iframe title="lava.top" style="border: none" width="180" height="80" src="https://widget.lava.top/f2a9dff0-cd84-4dea-b309-52a51009fb50"></iframe>
+<iframe title="lava.top" style="border: none" width="180" height="80" src="https://widget.lava.top/59e7f030-55c7-4434-a683-8083d77c15df"></iframe>
