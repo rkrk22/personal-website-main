@@ -1,10 +1,14 @@
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   ArrowLeft,
   ArrowRight,
   BookOpen,
   ExternalLink,
+  Image as ImageIcon,
   Instagram,
   Pencil,
   RotateCcw,
@@ -16,7 +20,12 @@ import { Button } from "@/components/ui/button";
 import avatar from "@/assets/avatar.jpg";
 import bookGameArtGuidebookMarkdown from "@/content/book-game-art-guidebook.md?raw";
 import { products } from "@/data/products";
-import { markdownToHtml } from "@/lib/markdown";
+import {
+  type ImageAlignment,
+  formatImageBlock,
+  markdownToHtml,
+  parseImageBlock,
+} from "@/lib/markdown";
 
 type MetaDefinition = {
   title: string;
@@ -28,6 +37,20 @@ type MetaDefinition = {
 type LegalSection = {
   heading: string;
   paragraphs: string[];
+};
+
+type SelectedImage = {
+  lineIndex: number;
+  value: ReturnType<typeof parseImageBlock>;
+};
+
+type PendingTextareaRestore = {
+  end: number;
+  scrollLeft: number;
+  scrollTop: number;
+  start: number;
+  windowScrollX: number;
+  windowScrollY: number;
 };
 
 function usePageMeta({ title, description, ogTitle, ogDescription }: MetaDefinition) {
@@ -573,10 +596,48 @@ function MarkdownEditor({
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveMessage, setSaveMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const pendingTextareaRestoreRef = useRef<PendingTextareaRestore | null>(null);
+
+  const getImageSelection = (value: string, cursorPosition: number): SelectedImage | null => {
+    const lines = value.split("\n");
+    let offset = 0;
+
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index];
+      const nextOffset = offset + line.length + 1;
+
+      if (cursorPosition <= nextOffset) {
+        const image = parseImageBlock(line);
+        return image ? { lineIndex: index, value: image } : null;
+      }
+
+      offset = nextOffset;
+    }
+
+    return null;
+  };
+
+  const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(() =>
+    getImageSelection(initialMarkdown, 0),
+  );
 
   useEffect(() => {
     window.localStorage.setItem(storageKey, markdown);
   }, [markdown, storageKey]);
+
+  useEffect(() => {
+    if (!textareaRef.current) {
+      setSelectedImage(null);
+      return;
+    }
+
+    if (document.activeElement !== textareaRef.current) {
+      return;
+    }
+
+    const nextSelection = getImageSelection(markdown, textareaRef.current.selectionStart);
+    setSelectedImage(nextSelection);
+  }, [markdown]);
 
   useEffect(() => {
     if (saveState !== "saved") {
@@ -587,8 +648,38 @@ function MarkdownEditor({
     return () => window.clearTimeout(timeoutId);
   }, [saveState]);
 
+  useLayoutEffect(() => {
+    const pendingRestore = pendingTextareaRestoreRef.current;
+    const textarea = textareaRef.current;
+
+    if (!pendingRestore || !textarea) {
+      return;
+    }
+
+    textarea.scrollTop = pendingRestore.scrollTop;
+    textarea.scrollLeft = pendingRestore.scrollLeft;
+    window.scrollTo(pendingRestore.windowScrollX, pendingRestore.windowScrollY);
+
+    if (document.activeElement === textarea) {
+      textarea.setSelectionRange(pendingRestore.start, pendingRestore.end);
+    }
+
+    pendingTextareaRestoreRef.current = null;
+  }, [markdown]);
+
   const updateMarkdown = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setMarkdown(event.target.value);
+  };
+
+  const syncSelectedImageFromTextarea = () => {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      setSelectedImage(null);
+      return;
+    }
+
+    setSelectedImage(getImageSelection(markdown, textarea.selectionStart));
   };
 
   const wrapSelection = (before: string, after = "") => {
@@ -635,11 +726,64 @@ function MarkdownEditor({
     });
   };
 
+  const replaceLine = (lineIndex: number, nextLine: string) => {
+    const lines = markdown.split("\n");
+    const currentLine = lines[lineIndex];
+
+    if (currentLine === undefined) {
+      return;
+    }
+
+    const textarea = textareaRef.current;
+    const activeElement = document.activeElement;
+    const shouldRestoreTextareaSelection = activeElement === textarea;
+    const previousScrollTop = textarea?.scrollTop ?? 0;
+    const previousScrollLeft = textarea?.scrollLeft ?? 0;
+    let position = 0;
+
+    for (let index = 0; index < lineIndex; index += 1) {
+      position += lines[index].length + 1;
+    }
+
+    pendingTextareaRestoreRef.current = {
+      end: position + nextLine.length,
+      scrollLeft: previousScrollLeft,
+      scrollTop: previousScrollTop,
+      start: position,
+      windowScrollX: window.scrollX,
+      windowScrollY: window.scrollY,
+    };
+
+    lines[lineIndex] = nextLine;
+    const nextMarkdown = lines.join("\n");
+    setMarkdown(nextMarkdown);
+
+    const nextImage = parseImageBlock(nextLine);
+    setSelectedImage(nextImage ? { lineIndex, value: nextImage } : null);
+  };
+
+  const updateSelectedImage = (updater: (current: NonNullable<SelectedImage["value"]>) => string) => {
+    if (!selectedImage?.value) {
+      return;
+    }
+
+    replaceLine(selectedImage.lineIndex, updater(selectedImage.value));
+  };
+
+  const setSelectedImageWidth = (width: number) => {
+    updateSelectedImage((image) => formatImageBlock({ ...image, width }));
+  };
+
+  const setSelectedImageAlignment = (align: ImageAlignment) => {
+    updateSelectedImage((image) => formatImageBlock({ ...image, align }));
+  };
+
   const resetMarkdown = () => {
     setMarkdown(initialMarkdown);
     window.localStorage.removeItem(storageKey);
     setSaveState("idle");
     setSaveMessage("");
+    setSelectedImage(getImageSelection(initialMarkdown, 0));
   };
 
   const saveMarkdown = async () => {
@@ -757,13 +901,22 @@ function MarkdownEditor({
               >
                 List
               </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="min-w-16"
+              onClick={() => insertBlock("[Link text](https://example.com)")}
+              >
+                Link
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
-                className="min-w-16"
-                onClick={() => insertBlock("[Link text](https://example.com)")}
+                className="min-w-20"
+                onClick={() => insertBlock("![Image alt](https://example.com/image.jpg)")}
               >
-                Link
+                <ImageIcon className="h-4 w-4" />
+                Image
               </Button>
               <Button
                 size="sm"
@@ -779,18 +932,86 @@ function MarkdownEditor({
               </Button>
             </div>
 
+            {selectedImage?.value ? (
+              <div className="rounded-xl border border-border bg-secondary/30 p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      Image
+                    </div>
+                    <div className="truncate text-sm text-foreground">{selectedImage.value.url}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={selectedImage.value.align === "left" ? "default" : "outline"}
+                      onClick={() => setSelectedImageAlignment("left")}
+                    >
+                      <AlignLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedImage.value.align === "center" ? "default" : "outline"}
+                      onClick={() => setSelectedImageAlignment("center")}
+                    >
+                      <AlignCenter className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedImage.value.align === "right" ? "default" : "outline"}
+                      onClick={() => setSelectedImageAlignment("right")}
+                    >
+                      <AlignRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <label className="text-sm text-muted-foreground">Width</label>
+                  <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    step="1"
+                    value={selectedImage.value.width}
+                    onChange={(event) => setSelectedImageWidth(Number(event.target.value))}
+                    className="flex-1"
+                  />
+                  <input
+                    type="number"
+                    min="20"
+                    max="100"
+                    step="1"
+                    value={selectedImage.value.width}
+                    onChange={(event) => setSelectedImageWidth(Number(event.target.value || 100))}
+                    className="w-20 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
+                  <div className="text-sm text-muted-foreground">%</div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-border bg-secondary/20 px-4 py-3 text-sm text-muted-foreground">
+                Поставь курсор на строку с картинкой, чтобы менять ширину и выравнивание.
+              </div>
+            )}
+
             <textarea
               ref={textareaRef}
               value={markdown}
               onChange={updateMarkdown}
+              onClick={syncSelectedImageFromTextarea}
+              onKeyUp={syncSelectedImageFromTextarea}
+              onSelect={syncSelectedImageFromTextarea}
               spellCheck={false}
               className="min-h-[360px] w-full rounded-xl border border-border bg-background px-4 py-3 text-sm leading-7 outline-none ring-0"
             />
           </div>
-        ) : null}
+        ) : (
+          <div className="mt-4">
+            <MarkdownContent markdown={markdown} />
+          </div>
+        )}
       </div>
-
-      <MarkdownContent markdown={markdown} />
     </div>
   );
 }

@@ -181,6 +181,32 @@
     @apply rounded bg-secondary px-1.5 py-0.5 text-[0.9em] text-foreground;
   }
 
+  .markdown-content .markdown-image {
+    @apply mt-6 flex;
+    padding-left: var(--markdown-image-indent, 0rem);
+  }
+
+  .markdown-content .markdown-image--left {
+    @apply justify-start;
+  }
+
+  .markdown-content .markdown-image--center {
+    @apply justify-center;
+  }
+
+  .markdown-content .markdown-image--right {
+    @apply justify-end;
+  }
+
+  .markdown-content .markdown-image img {
+    @apply block h-auto max-w-full rounded-2xl;
+    width: min(100%, var(--markdown-image-width, 100%));
+  }
+
+  .markdown-content .markdown-spacer {
+    height: calc(var(--markdown-spacer-lines, 1) * 1.5rem);
+  }
+
   .markdown-content iframe {
     @apply mt-6 max-w-full;
   }
