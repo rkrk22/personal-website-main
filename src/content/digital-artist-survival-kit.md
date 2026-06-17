@@ -1,4 +1,4 @@
-https://ik.imagekit.io/71jz3gcgav/book-icon-2_NeoEDakmU.gif?updatedAt=1781682017926 {width=53 align=center}
+https://ik.imagekit.io/71jz3gcgav/book_icon1_ucBi8YilUK.gif {width=53 align=center}
 
 # Книга "Набор для выживания диджитал художника / Digital Artist's Survival Kit"
 

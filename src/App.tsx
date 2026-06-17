@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import avatar from "@/assets/avatar.jpg";
 import bookGameArtGuidebookMarkdown from "@/content/book-game-art-guidebook.md?raw";
 import digitalArtistSurvivalKitMarkdown from "@/content/digital-artist-survival-kit.md?raw";
+import { homeSettings } from "@/data/home-settings";
 import { type Product, products } from "@/data/products";
 import {
   type ImageAlignment,
@@ -99,6 +100,94 @@ const socials = [
 const featuredProducts = products.filter((product) => product.featuredOnHome);
 const iframeWidgetPattern =
   /<iframe[^>]*src="([^"]+)"[^>]*><\/iframe>|<iframe[^>]*src="([^"]+)"[^>]*>/i;
+const portfolioHref = "https://www.behance.net/ruslankim";
+const defaultSignupBackgroundColor = "#455761";
+const defaultSignupButtonColor = "#FFFFFF";
+
+function normalizeHexColor(value: string) {
+  const trimmed = value.trim();
+  return /^#(?:[0-9a-fA-F]{6})$/.test(trimmed) ? trimmed.toUpperCase() : null;
+}
+
+function hexToRgba(hex: string, alpha: number) {
+  const normalized = normalizeHexColor(hex) ?? defaultSignupBackgroundColor;
+  const red = Number.parseInt(normalized.slice(1, 3), 16);
+  const green = Number.parseInt(normalized.slice(3, 5), 16);
+  const blue = Number.parseInt(normalized.slice(5, 7), 16);
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+function getContrastingTextColor(hex: string) {
+  const normalized = normalizeHexColor(hex) ?? defaultSignupButtonColor;
+  const red = Number.parseInt(normalized.slice(1, 3), 16);
+  const green = Number.parseInt(normalized.slice(3, 5), 16);
+  const blue = Number.parseInt(normalized.slice(5, 7), 16);
+  const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+
+  return luminance > 0.62 ? "#1B2328" : "#FFFFFF";
+}
+
+function getProductCardStyles(cardBackgroundColor?: string) {
+  const backgroundColor = normalizeHexColor(cardBackgroundColor ?? "");
+
+  if (!backgroundColor) {
+    return null;
+  }
+
+  const textColor = getContrastingTextColor(backgroundColor);
+
+  return {
+    backgroundColor,
+    borderColor: hexToRgba(textColor, 0.14),
+    kindColor: hexToRgba(textColor, 0.72),
+    mutedColor: hexToRgba(textColor, 0.76),
+    textColor,
+  };
+}
+
+function getSiteIconUrl(href: string) {
+  try {
+    const { hostname } = new URL(href);
+    return `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
+  } catch {
+    return null;
+  }
+}
+
+function ExternalSiteIcon({
+  href,
+  fallback,
+}: {
+  href: string;
+  fallback: string;
+}) {
+  const [hasError, setHasError] = useState(false);
+  const iconUrl = getSiteIconUrl(href);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [href]);
+
+  if (!iconUrl || hasError) {
+    return (
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary text-sm font-semibold">
+        {fallback}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary">
+      <img
+        src={iconUrl}
+        alt=""
+        className="h-7 w-7 rounded-sm object-contain"
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
 
 function ProductCard({
   title,
@@ -106,6 +195,7 @@ function ProductCard({
   href,
   kind,
   iconUrl,
+  cardBackgroundColor,
   ribbonLabel,
 }: {
   title: string;
@@ -113,10 +203,12 @@ function ProductCard({
   href: string;
   kind: string;
   iconUrl?: string;
+  cardBackgroundColor?: string;
   ribbonLabel?: string;
 }) {
   const location = useLocation();
   const targetHref = location.pathname === "/shop/" ? `${href}?from=shop` : href;
+  const cardStyles = getProductCardStyles(cardBackgroundColor);
 
   return (
     <a
@@ -128,12 +220,12 @@ function ProductCard({
           {ribbonLabel}
         </div>
       ) : null}
-      <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-visible rounded-xl bg-secondary">
+      <div className="relative mt-1 flex h-14 w-14 shrink-0 items-center justify-center overflow-visible rounded-[1.75rem] bg-secondary/70">
         {iconUrl ? (
           <img
             src={iconUrl}
             alt=""
-            className="pointer-events-none h-[7rem] w-[7rem] scale-[1.35] object-contain"
+            className="pointer-events-none h-[7rem] w-[7rem] scale-[1.35] rounded-[1.5rem] object-contain"
           />
         ) : (
           <BookOpen className="h-6 w-6 text-foreground" />
@@ -143,10 +235,32 @@ function ProductCard({
         <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
           {kind}
         </div>
-        <div className="mt-1 text-sm font-semibold tracking-tight">{title}</div>
-        <div className="text-xs text-muted-foreground">{subtitle}</div>
+        <div
+          className="mt-2 flex items-center gap-3 rounded-2xl px-4 py-3"
+          style={
+            cardStyles
+              ? {
+                  backgroundColor: cardStyles.backgroundColor,
+                  color: cardStyles.textColor,
+                }
+              : undefined
+          }
+        >
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold tracking-tight">{title}</div>
+            <div
+              className="text-xs text-muted-foreground"
+              style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
+            >
+              {subtitle}
+            </div>
+          </div>
+          <ArrowRight
+            className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+            style={cardStyles ? { color: cardStyles.kindColor } : undefined}
+          />
+        </div>
       </div>
-      <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
     </a>
   );
 }
@@ -157,6 +271,7 @@ function ProductTile({
   href,
   kind,
   iconUrl,
+  cardBackgroundColor,
   ribbonLabel,
 }: {
   title: string;
@@ -164,10 +279,12 @@ function ProductTile({
   href: string;
   kind: string;
   iconUrl?: string;
+  cardBackgroundColor?: string;
   ribbonLabel?: string;
 }) {
   const location = useLocation();
   const targetHref = location.pathname === "/shop/" ? `${href}?from=shop` : href;
+  const cardStyles = getProductCardStyles(cardBackgroundColor);
 
   return (
     <a
@@ -179,25 +296,47 @@ function ProductTile({
           {ribbonLabel}
         </div>
       ) : null}
-      <div className="relative flex h-16 w-16 items-center justify-center overflow-visible rounded-[1.35rem] bg-secondary">
+      <div className="relative mt-3 flex h-16 w-16 items-center justify-center overflow-visible rounded-[2rem] bg-secondary/70">
         {iconUrl ? (
           <img
             src={iconUrl}
             alt=""
-            className="pointer-events-none h-[10rem] w-[10rem] scale-[1.4] object-contain"
+            className="pointer-events-none h-[10rem] w-[10rem] scale-[1.4] rounded-[1.9rem] object-contain"
           />
         ) : (
           <BookOpen className="h-7 w-7 text-foreground" />
         )}
       </div>
-      <div className="mt-8 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+      <div
+        className="mt-8 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+      >
         {kind}
       </div>
-      <h2 className="mt-3 text-xl font-semibold tracking-tight">{title}</h2>
-      <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">{subtitle}</p>
-      <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-foreground">
-        Open
-        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+      <div
+        className="mt-3 flex flex-1 flex-col rounded-[1.6rem] px-5 py-5"
+        style={
+          cardStyles
+            ? {
+                backgroundColor: cardStyles.backgroundColor,
+                color: cardStyles.textColor,
+              }
+            : undefined
+        }
+      >
+        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+        <p
+          className="mt-3 flex-1 text-sm leading-6 text-muted-foreground"
+          style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
+        >
+          {subtitle}
+        </p>
+        <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium">
+          Open
+          <ArrowRight
+            className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+            style={cardStyles ? { color: cardStyles.kindColor } : undefined}
+          />
+        </div>
       </div>
     </a>
   );
@@ -216,6 +355,14 @@ function ProductIconEditor({
   const updateIconUrl = (id: string, iconUrl: string) => {
     onChange(
       draftProducts.map((product) => (product.id === id ? { ...product, iconUrl } : product)),
+    );
+  };
+
+  const updateCardBackgroundColor = (id: string, cardBackgroundColor: string) => {
+    onChange(
+      draftProducts.map((product) =>
+        product.id === id ? { ...product, cardBackgroundColor } : product,
+      ),
     );
   };
 
@@ -257,7 +404,7 @@ function ProductIconEditor({
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Product Icons</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Вставь ссылку на картинку для товара. Пустое поле оставит стандартную иконку.
+            Вставь ссылку на картинку и при необходимости выбери цвет всей плашки товара.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -283,35 +430,266 @@ function ProductIconEditor({
 
       <div className="mt-6 space-y-4">
         {draftProducts.map((product) => (
+          (() => {
+            const cardStyles = getProductCardStyles(product.cardBackgroundColor);
+
+            return (
           <div
             key={product.id}
             className="rounded-2xl border border-border bg-background/60 p-4 sm:p-5"
           >
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="relative flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center overflow-visible rounded-[1.35rem] bg-secondary">
+              <div
+                className="relative mt-1 flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center overflow-visible rounded-[2rem] bg-secondary"
+              >
                 {product.iconUrl ? (
                   <img
                     src={product.iconUrl}
                     alt=""
-                    className="pointer-events-none h-[10rem] w-[10rem] scale-[1.4] object-contain"
+                    className="pointer-events-none h-[10rem] w-[10rem] scale-[1.4] rounded-[1.9rem] object-contain"
                   />
                 ) : (
                   <BookOpen className="h-7 w-7 text-foreground" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold tracking-tight">{product.title}</div>
-                <div className="mt-1 text-xs text-muted-foreground">{product.id}</div>
+                <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                  {product.kind}
+                </div>
+                <div
+                  className="mt-2 rounded-2xl px-4 py-3"
+                  style={
+                    cardStyles
+                      ? {
+                          backgroundColor: cardStyles.backgroundColor,
+                          color: cardStyles.textColor,
+                        }
+                      : undefined
+                  }
+                >
+                  <div className="text-sm font-semibold tracking-tight">{product.title}</div>
+                  <div
+                    className="mt-1 text-xs text-muted-foreground"
+                    style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
+                  >
+                    {product.id}
+                  </div>
+                </div>
                 <Input
                   value={product.iconUrl ?? ""}
                   onChange={(event) => updateIconUrl(product.id, event.target.value)}
                   placeholder="https://example.com/icon.png"
                   className="mt-3"
                 />
+                <div className="mt-3 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+                  <input
+                    type="color"
+                    value={normalizeHexColor(product.cardBackgroundColor ?? "") ?? "#E8EDF3"}
+                    onChange={(event) =>
+                      updateCardBackgroundColor(product.id, event.target.value.toUpperCase())
+                    }
+                    className="h-10 w-16 cursor-pointer rounded-md border border-input bg-transparent p-1"
+                  />
+                  <Input
+                    value={product.cardBackgroundColor ?? ""}
+                    onChange={(event) =>
+                      updateCardBackgroundColor(product.id, event.target.value)
+                    }
+                    placeholder="#E8EDF3"
+                  />
+                </div>
               </div>
             </div>
           </div>
+            );
+          })()
         ))}
+      </div>
+    </section>
+  );
+}
+
+function SignupBackgroundEditor({
+  value,
+  color,
+  buttonColor,
+  onChange,
+  onColorChange,
+  onButtonColorChange,
+}: {
+  value: string;
+  color: string;
+  buttonColor: string;
+  onChange: (value: string) => void;
+  onColorChange: (value: string) => void;
+  onButtonColorChange: (value: string) => void;
+}) {
+  const [draftValue, setDraftValue] = useState(value);
+  const [draftColor, setDraftColor] = useState(color);
+  const [draftButtonColor, setDraftButtonColor] = useState(buttonColor);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveMessage, setSaveMessage] = useState("");
+
+  useEffect(() => {
+    setDraftValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    setDraftColor(color);
+  }, [color]);
+
+  useEffect(() => {
+    setDraftButtonColor(buttonColor);
+  }, [buttonColor]);
+
+  const resetValue = () => {
+    const nextValue = homeSettings.signupBackgroundImageUrl ?? "";
+    const nextColor = homeSettings.signupBackgroundColor ?? defaultSignupBackgroundColor;
+    const nextButtonColor = homeSettings.signupButtonColor ?? defaultSignupButtonColor;
+    setDraftValue(nextValue);
+    setDraftColor(nextColor);
+    setDraftButtonColor(nextButtonColor);
+    onChange(nextValue);
+    onColorChange(nextColor);
+    onButtonColorChange(nextButtonColor);
+    setSaveState("idle");
+    setSaveMessage("");
+  };
+
+  const saveValue = async () => {
+    setSaveState("saving");
+    setSaveMessage("");
+
+    try {
+      const response = await fetch("/__save-home-settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          signupBackgroundImageUrl: draftValue,
+          signupBackgroundColor: normalizeHexColor(draftColor) ?? defaultSignupBackgroundColor,
+          signupButtonColor: normalizeHexColor(draftButtonColor) ?? defaultSignupButtonColor,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Failed to save signup background");
+      }
+
+      onChange(draftValue.trim());
+      onColorChange(normalizeHexColor(draftColor) ?? defaultSignupBackgroundColor);
+      onButtonColorChange(normalizeHexColor(draftButtonColor) ?? defaultSignupButtonColor);
+      setSaveState("saved");
+      setSaveMessage("Saved to src/data/home-settings.ts");
+    } catch (error) {
+      setSaveState("error");
+      setSaveMessage(
+        error instanceof Error ? error.message : "Failed to save signup background",
+      );
+    }
+  };
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h3 className="text-sm font-semibold tracking-tight">Signup Background</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Ссылка на картинку для фона плашки. Работает только в localhost.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={resetValue}>
+            <RotateCcw className="h-4 w-4" />
+            Reset
+          </Button>
+          <Button onClick={saveValue} disabled={saveState === "saving"}>
+            {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save"}
+          </Button>
+        </div>
+      </div>
+
+      {saveMessage ? (
+        <p
+          className={`mt-3 text-sm ${
+            saveState === "error" ? "text-destructive" : "text-muted-foreground"
+          }`}
+        >
+          {saveMessage}
+        </p>
+      ) : null}
+
+      <Input
+        value={draftValue}
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          setDraftValue(nextValue);
+          onChange(nextValue.trim());
+          setSaveState("idle");
+          setSaveMessage("");
+        }}
+        placeholder="https://example.com/signup-background.jpg"
+        className="mt-4"
+      />
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+        <input
+          type="color"
+          value={normalizeHexColor(draftColor) ?? defaultSignupBackgroundColor}
+          onChange={(event) => {
+            const nextColor = event.target.value.toUpperCase();
+            setDraftColor(nextColor);
+            onColorChange(nextColor);
+            setSaveState("idle");
+            setSaveMessage("");
+          }}
+          className="h-10 w-16 cursor-pointer rounded-md border border-input bg-transparent p-1"
+        />
+        <Input
+          value={draftColor}
+          onChange={(event) => {
+            const nextColor = event.target.value;
+            setDraftColor(nextColor);
+            const normalizedColor = normalizeHexColor(nextColor);
+            if (normalizedColor) {
+              onColorChange(normalizedColor);
+            }
+            setSaveState("idle");
+            setSaveMessage("");
+          }}
+          placeholder="#455761"
+        />
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+        <input
+          type="color"
+          value={normalizeHexColor(draftButtonColor) ?? defaultSignupButtonColor}
+          onChange={(event) => {
+            const nextColor = event.target.value.toUpperCase();
+            setDraftButtonColor(nextColor);
+            onButtonColorChange(nextColor);
+            setSaveState("idle");
+            setSaveMessage("");
+          }}
+          className="h-10 w-16 cursor-pointer rounded-md border border-input bg-transparent p-1"
+        />
+        <Input
+          value={draftButtonColor}
+          onChange={(event) => {
+            const nextColor = event.target.value;
+            setDraftButtonColor(nextColor);
+            const normalizedColor = normalizeHexColor(nextColor);
+            if (normalizedColor) {
+              onButtonColorChange(normalizedColor);
+            }
+            setSaveState("idle");
+            setSaveMessage("");
+          }}
+          placeholder="#FFFFFF"
+        />
       </div>
     </section>
   );
@@ -545,6 +923,16 @@ const termsOfServiceSections: LegalSection[] = [
 ];
 
 function HomePage() {
+  const [signupBackgroundImageUrl, setSignupBackgroundImageUrl] = useState(
+    homeSettings.signupBackgroundImageUrl ?? "",
+  );
+  const [signupBackgroundColor, setSignupBackgroundColor] = useState(
+    homeSettings.signupBackgroundColor ?? defaultSignupBackgroundColor,
+  );
+  const [signupButtonColor, setSignupButtonColor] = useState(
+    homeSettings.signupButtonColor ?? defaultSignupButtonColor,
+  );
+
   usePageMeta({
     title: "Ruslan Kim — Digital Artist & Game Art Educator",
     description:
@@ -604,20 +992,19 @@ function HomePage() {
               href={product.href}
               kind={product.kind}
               iconUrl={product.iconUrl}
+              cardBackgroundColor={product.cardBackgroundColor}
               ribbonLabel={product.ribbonLabel}
             />
           ))}
         </div>
 
         <a
-          href="https://www.behance.net/ruslankim"
+          href={portfolioHref}
           target="_blank"
           rel="noreferrer"
           className="group mt-3 flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
         >
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary text-sm font-semibold">
-            P
-          </div>
+          <ExternalSiteIcon href={portfolioHref} fallback="P" />
           <div className="flex-1 text-left">
             <div className="text-sm font-semibold tracking-tight">Portfolio</div>
             <div className="text-xs text-muted-foreground">Selected works and projects</div>
@@ -627,22 +1014,59 @@ function HomePage() {
       </section>
 
       <section className="mt-10">
-        <div className="rounded-2xl border border-[oklch(0.42_0.025_235)] bg-[oklch(0.34_0.025_235)] px-6 py-8 text-[oklch(0.96_0.003_255)] sm:px-10 sm:py-10">
-          <div className="flex flex-col items-center text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/8">
-              <Send className="h-5 w-5" />
+        <div className="space-y-4">
+          <div
+            className="relative overflow-hidden rounded-2xl bg-[oklch(0.34_0.025_235)] px-6 py-8 text-white sm:px-10 sm:py-10"
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              style={{ backgroundColor: normalizeHexColor(signupBackgroundColor) ?? defaultSignupBackgroundColor }}
+            />
+            {isLocalEditorEnabled && signupBackgroundImageUrl ? (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-[0.58]"
+                style={{ backgroundImage: `url("${signupBackgroundImageUrl}")` }}
+              />
+            ) : null}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage: `linear-gradient(180deg, ${hexToRgba(signupBackgroundColor, 0.68)}, ${hexToRgba(signupBackgroundColor, 0.78)})`,
+              }}
+            />
+            <div className="relative flex flex-col items-center text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/8">
+                <Send className="h-5 w-5" />
+              </div>
+              <h2 className="mt-4 text-2xl font-semibold tracking-tight">Signup</h2>
+              <p className="mt-2 max-w-sm text-sm text-white">
+                Notes on game art, digital painting and the creative process.
+              </p>
+              <a
+                href="/signup/"
+                className="mt-5 inline-flex items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
+                style={{
+                  backgroundColor: normalizeHexColor(signupButtonColor) ?? defaultSignupButtonColor,
+                  color: getContrastingTextColor(signupButtonColor),
+                }}
+              >
+                Sign up
+              </a>
             </div>
-            <h2 className="mt-4 text-2xl font-semibold tracking-tight">Signup</h2>
-            <p className="mt-2 max-w-sm text-sm text-[oklch(0.84_0.012_235)]">
-              Notes on game art, digital painting and the creative process.
-            </p>
-            <a
-              href="/signup/"
-              className="mt-5 inline-flex items-center justify-center rounded-md bg-[oklch(0.97_0.008_235)] px-5 py-2.5 text-sm font-medium text-[oklch(0.28_0.025_235)] transition-opacity hover:opacity-90"
-            >
-              Sign up
-            </a>
           </div>
+          {isLocalEditorEnabled ? (
+            <SignupBackgroundEditor
+              value={signupBackgroundImageUrl}
+              color={signupBackgroundColor}
+              buttonColor={signupButtonColor}
+              onChange={setSignupBackgroundImageUrl}
+              onColorChange={setSignupBackgroundColor}
+              onButtonColorChange={setSignupButtonColor}
+            />
+          ) : null}
         </div>
       </section>
 
@@ -662,7 +1086,7 @@ export function ShopPage() {
   });
 
   return (
-    <main className="mx-auto max-w-3xl px-6 pb-24 pt-12 sm:pt-16">
+    <main className="mx-auto max-w-3xl px-6 pb-24 pt-8 sm:pt-10">
       <a
         href="/"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -671,24 +1095,25 @@ export function ShopPage() {
         Back to home
       </a>
 
-      <section className="mt-8 rounded-3xl border border-border bg-card p-8 sm:p-10">
+      <section className="mt-5">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Shop</h1>
-        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+        <p className="mt-2 text-sm text-muted-foreground sm:text-base">
           Books, products, and resources in one place.
         </p>
       </section>
 
-      <section className="mt-6 grid gap-4 sm:grid-cols-2">
+      <section className="mt-5 grid gap-4 sm:grid-cols-2">
         {shopProducts.map((product) => (
-          <ProductTile
-            key={product.id}
-            title={product.title}
-            subtitle={product.description}
-            href={product.href}
-            kind={product.kind}
-            iconUrl={product.iconUrl}
-            ribbonLabel={product.ribbonLabel}
-          />
+        <ProductTile
+          key={product.id}
+          title={product.title}
+          subtitle={product.description}
+          href={product.href}
+          kind={product.kind}
+          iconUrl={product.iconUrl}
+          cardBackgroundColor={product.cardBackgroundColor}
+          ribbonLabel={product.ribbonLabel}
+        />
         ))}
       </section>
 

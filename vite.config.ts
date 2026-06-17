@@ -10,6 +10,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const contentDir = path.resolve(rootDir, "src/content");
 const productsFilePath = path.resolve(rootDir, "src/data/products.ts");
+const homeSettingsFilePath = path.resolve(rootDir, "src/data/home-settings.ts");
 
 type ProductRecord = {
   id: string;
@@ -19,10 +20,17 @@ type ProductRecord = {
   href: string;
   kind: string;
   iconUrl?: string;
+  cardBackgroundColor?: string;
   ribbonLabel?: string;
   featuredOnHome?: boolean;
   homeTitle?: string;
   homeSubtitle?: string;
+};
+
+type HomeSettingsRecord = {
+  signupBackgroundImageUrl?: string;
+  signupBackgroundColor?: string;
+  signupButtonColor?: string;
 };
 
 function serializeProductsModule(products: ProductRecord[]) {
@@ -39,6 +47,7 @@ function serializeProductsModule(products: ProductRecord[]) {
   href: string;
   kind: string;
   iconUrl?: string;
+  cardBackgroundColor?: string;
   ribbonLabel?: string;
   featuredOnHome?: boolean;
   homeTitle?: string;
@@ -46,6 +55,22 @@ function serializeProductsModule(products: ProductRecord[]) {
 };
 
 export const products: Product[] = ${serialized};
+`;
+}
+
+function serializeHomeSettingsModule(settings: HomeSettingsRecord) {
+  const serialized = JSON.stringify(settings, null, 2).replace(
+    /^(\s*)"([A-Za-z_$][\w$]*)":/gm,
+    "$1$2:",
+  );
+
+  return `export type HomeSettings = {
+  signupBackgroundImageUrl?: string;
+  signupBackgroundColor?: string;
+  signupButtonColor?: string;
+};
+
+export const homeSettings: HomeSettings = ${serialized};
 `;
 }
 
@@ -135,9 +160,83 @@ function markdownSavePlugin(): PluginOption {
           const sanitizedProducts = body.products.map((product) => ({
             ...product,
             iconUrl: product.iconUrl?.trim() || undefined,
+            cardBackgroundColor: product.cardBackgroundColor?.trim() || undefined,
           }));
 
           await fs.writeFile(productsFilePath, serializeProductsModule(sanitizedProducts), "utf8");
+
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true }));
+        } catch (error) {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: false,
+              error: error instanceof Error ? error.message : "Unknown save error",
+            }),
+          );
+        }
+      });
+
+      server.middlewares.use("/__save-home-settings", async (req, res) => {
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.end("Method Not Allowed");
+          return;
+        }
+
+        try {
+          const chunks: Buffer[] = [];
+
+          for await (const chunk of req) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+          }
+
+          const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as {
+            signupBackgroundImageUrl?: string;
+            signupBackgroundColor?: string;
+            signupButtonColor?: string;
+          };
+
+          if (
+            typeof body.signupBackgroundImageUrl !== "string" &&
+            typeof body.signupBackgroundImageUrl !== "undefined"
+          ) {
+            res.statusCode = 400;
+            res.end("Invalid payload");
+            return;
+          }
+
+          if (
+            typeof body.signupBackgroundColor !== "string" &&
+            typeof body.signupBackgroundColor !== "undefined"
+          ) {
+            res.statusCode = 400;
+            res.end("Invalid payload");
+            return;
+          }
+
+          if (
+            typeof body.signupButtonColor !== "string" &&
+            typeof body.signupButtonColor !== "undefined"
+          ) {
+            res.statusCode = 400;
+            res.end("Invalid payload");
+            return;
+          }
+
+          const sanitizedSettings: HomeSettingsRecord = {
+            signupBackgroundImageUrl: body.signupBackgroundImageUrl?.trim() || undefined,
+            signupBackgroundColor: body.signupBackgroundColor?.trim() || undefined,
+            signupButtonColor: body.signupButtonColor?.trim() || undefined,
+          };
+
+          await fs.writeFile(
+            homeSettingsFilePath,
+            serializeHomeSettingsModule(sanitizedSettings),
+            "utf8",
+          );
 
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ ok: true }));
