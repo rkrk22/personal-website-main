@@ -176,7 +176,7 @@ function MarkdownContent({ markdown }: { markdown: string }) {
   const { contentMarkdown, widgetSrc } = extractWidgetSource(markdown);
 
   return (
-    <article className="markdown-content rounded-3xl border border-border bg-card p-8 sm:p-10">
+    <article className="markdown-content rounded-3xl border border-border bg-card px-8 pb-8 pt-0 sm:px-10 sm:pb-10 sm:pt-0">
       <div dangerouslySetInnerHTML={{ __html: markdownToHtml(contentMarkdown) }} />
       {widgetSrc ? (
         <div className="mt-6">

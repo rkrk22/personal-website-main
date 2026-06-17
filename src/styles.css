@@ -186,6 +186,10 @@
     padding-left: var(--markdown-image-indent, 0rem);
   }
 
+  .markdown-content > .markdown-image:first-child {
+    margin-top: 0;
+  }
+
   .markdown-content .markdown-image--left {
     @apply justify-start;
   }
