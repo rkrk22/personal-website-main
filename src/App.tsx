@@ -98,8 +98,6 @@ const socials = [
 ];
 
 const featuredProducts = products.filter((product) => product.featuredOnHome);
-const iframeWidgetPattern =
-  /<iframe[^>]*src="([^"]+)"[^>]*><\/iframe>|<iframe[^>]*src="([^"]+)"[^>]*>/i;
 const portfolioHref = "https://www.behance.net/ruslankim";
 const portfolioCardStyles = getProductCardStyles("#F7F7F7");
 const defaultSignupBackgroundColor = "#455761";
@@ -760,34 +758,10 @@ function SignupBackgroundEditor({
   );
 }
 
-function extractWidgetSource(markdown: string) {
-  const match = markdown.match(iframeWidgetPattern);
-  const widgetSrc = match?.[1] ?? match?.[2] ?? null;
-  const contentMarkdown = match ? markdown.replace(match[0], "").trim() : markdown;
-
-  return {
-    contentMarkdown,
-    widgetSrc,
-  };
-}
-
 function MarkdownContent({ markdown }: { markdown: string }) {
-  const { contentMarkdown, widgetSrc } = extractWidgetSource(markdown);
-
   return (
     <article className="markdown-content rounded-3xl border border-border bg-card px-8 pb-8 pt-0 sm:px-10 sm:pb-10 sm:pt-0">
-      <div dangerouslySetInnerHTML={{ __html: markdownToHtml(contentMarkdown) }} />
-      {widgetSrc ? (
-        <div className="mt-6">
-          <iframe
-            title="lava.top"
-            style={{ border: "none" }}
-            width="180"
-            height="80"
-            src={widgetSrc}
-          />
-        </div>
-      ) : null}
+      <div dangerouslySetInnerHTML={{ __html: markdownToHtml(markdown) }} />
     </article>
   );
 }

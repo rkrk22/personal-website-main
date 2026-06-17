@@ -1,4 +1,4 @@
-https://ik.imagekit.io/71jz3gcgav/%D1%81ourse_icon_Sd4Y4uRyt.gif {width=53 align=center}
+https://ik.imagekit.io/71jz3gcgav/%D1%81ourse_icon_Sd4Y4uRyt.gif {width=48 align=center}
 # Путь художника в геймдев
 
 Практический мини курс из 6 уроков. Видео + текст. Для начинающих художников которые хотят в игровую индустрию.
@@ -23,6 +23,10 @@ https://ik.imagekit.io/71jz3gcgav/%D1%81ourse_icon_Sd4Y4uRyt.gif {width=53 align
 - Как развиваться в текущих условиях
 - Заключение
 https://ik.imagekit.io/71jz3gcgav/Screenshot-2026-06-17-at-18.32.09_ilh3PBQjl.gif
-## Для чего я сделал этот курс
 
+Как получить курс?
+Выберите один из удобных способов ниже:
+<iframe title="lava.top" style="border: none" width="250" height="80" src="https://widget.lava.top/4a857fa8-8e80-4d21-b6d4-cc88b07b1caf"></iframe>
+
+## Для чего я сделал этот курс
 Этот курс собран как короткий и понятный старт для художников, которым нужна база и направление движения. Без лишней воды: только то, что поможет быстрее понять профессию и двигаться к первым реальным результатам.
