@@ -36,6 +36,15 @@ export const products: Product[] = [
     href: "/books/game-art-guidebook",
     kind: "Book",
     iconUrl: "https://ik.imagekit.io/71jz3gcgav/book_icons_all_nK58XFLPK.gif",
-    cardBackgroundColor: "#F7F7F7"
+    cardBackgroundColor: "#FFFFFF"
+  },
+  {
+    id: "artist-path-in-gamedev",
+    title: "Путь художника в геймдев",
+    subtitle: "Практический курс для художников, которые хотят войти в игровую индустрию",
+    description: "Практический мини курс из 6 уроков. Видео + текст. Для начинающих художников которые хотят в игровую индустрию",
+    href: "/courses/artist-path-in-gamedev/",
+    kind: "Курс",
+    iconUrl: "https://ik.imagekit.io/71jz3gcgav/%D1%81ourse_icon_Sd4Y4uRyt.gif"
   }
 ];

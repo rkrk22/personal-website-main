@@ -61,7 +61,7 @@ function buildHtml({ slug, pageTitle }) {
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary" />
-    <link rel="icon" href="data:," />
+    <link rel="icon" href="/favicon.ico" />
     <link rel="stylesheet" href="/standalone-page.css" />
   </head>
   <body>

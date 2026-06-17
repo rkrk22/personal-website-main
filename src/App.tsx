@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
-  ExternalLink,
   Image as ImageIcon,
   Instagram,
   Pencil,
@@ -19,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import avatar from "@/assets/avatar.jpg";
+import artistPathInGamedevMarkdown from "@/content/artist-path-in-gamedev.md?raw";
 import bookGameArtGuidebookMarkdown from "@/content/book-game-art-guidebook.md?raw";
 import digitalArtistSurvivalKitMarkdown from "@/content/digital-artist-survival-kit.md?raw";
 import { homeSettings } from "@/data/home-settings";
@@ -101,6 +101,7 @@ const featuredProducts = products.filter((product) => product.featuredOnHome);
 const iframeWidgetPattern =
   /<iframe[^>]*src="([^"]+)"[^>]*><\/iframe>|<iframe[^>]*src="([^"]+)"[^>]*>/i;
 const portfolioHref = "https://www.behance.net/ruslankim";
+const portfolioCardStyles = getProductCardStyles("#F7F7F7");
 const defaultSignupBackgroundColor = "#455761";
 const defaultSignupButtonColor = "#FFFFFF";
 
@@ -155,13 +156,7 @@ function getSiteIconUrl(href: string) {
   }
 }
 
-function ExternalSiteIcon({
-  href,
-  fallback,
-}: {
-  href: string;
-  fallback: string;
-}) {
+function ExternalSiteIcon({ href, fallback }: { href: string; fallback: string }) {
   const [hasError, setHasError] = useState(false);
   const iconUrl = getSiteIconUrl(href);
 
@@ -171,14 +166,14 @@ function ExternalSiteIcon({
 
   if (!iconUrl || hasError) {
     return (
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary text-sm font-semibold">
+      <div className="relative mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.75rem] text-sm font-semibold">
         {fallback}
       </div>
     );
   }
 
   return (
-    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary">
+    <div className="relative mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.75rem]">
       <img
         src={iconUrl}
         alt=""
@@ -307,9 +302,7 @@ function ProductTile({
           <BookOpen className="h-7 w-7 text-foreground" />
         )}
       </div>
-      <div
-        className="mt-8 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
-      >
+      <div className="mt-8 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
         {kind}
       </div>
       <div
@@ -429,81 +422,79 @@ function ProductIconEditor({
       ) : null}
 
       <div className="mt-6 space-y-4">
-        {draftProducts.map((product) => (
+        {draftProducts.map((product) =>
           (() => {
             const cardStyles = getProductCardStyles(product.cardBackgroundColor);
 
             return (
-          <div
-            key={product.id}
-            className="rounded-2xl border border-border bg-background/60 p-4 sm:p-5"
-          >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div
-                className="relative mt-1 flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center overflow-visible rounded-[2rem] bg-secondary"
+                key={product.id}
+                className="rounded-2xl border border-border bg-background/60 p-4 sm:p-5"
               >
-                {product.iconUrl ? (
-                  <img
-                    src={product.iconUrl}
-                    alt=""
-                    className="pointer-events-none h-[10rem] w-[10rem] scale-[1.4] rounded-[1.9rem] object-contain"
-                  />
-                ) : (
-                  <BookOpen className="h-7 w-7 text-foreground" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                  {product.kind}
-                </div>
-                <div
-                  className="mt-2 rounded-2xl px-4 py-3"
-                  style={
-                    cardStyles
-                      ? {
-                          backgroundColor: cardStyles.backgroundColor,
-                          color: cardStyles.textColor,
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="relative mt-1 flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center overflow-visible rounded-[2rem] bg-secondary">
+                    {product.iconUrl ? (
+                      <img
+                        src={product.iconUrl}
+                        alt=""
+                        className="pointer-events-none h-[10rem] w-[10rem] scale-[1.4] rounded-[1.9rem] object-contain"
+                      />
+                    ) : (
+                      <BookOpen className="h-7 w-7 text-foreground" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                      {product.kind}
+                    </div>
+                    <div
+                      className="mt-2 rounded-2xl px-4 py-3"
+                      style={
+                        cardStyles
+                          ? {
+                              backgroundColor: cardStyles.backgroundColor,
+                              color: cardStyles.textColor,
+                            }
+                          : undefined
+                      }
+                    >
+                      <div className="text-sm font-semibold tracking-tight">{product.title}</div>
+                      <div
+                        className="mt-1 text-xs text-muted-foreground"
+                        style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
+                      >
+                        {product.id}
+                      </div>
+                    </div>
+                    <Input
+                      value={product.iconUrl ?? ""}
+                      onChange={(event) => updateIconUrl(product.id, event.target.value)}
+                      placeholder="https://example.com/icon.png"
+                      className="mt-3"
+                    />
+                    <div className="mt-3 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+                      <input
+                        type="color"
+                        value={normalizeHexColor(product.cardBackgroundColor ?? "") ?? "#E8EDF3"}
+                        onChange={(event) =>
+                          updateCardBackgroundColor(product.id, event.target.value.toUpperCase())
                         }
-                      : undefined
-                  }
-                >
-                  <div className="text-sm font-semibold tracking-tight">{product.title}</div>
-                  <div
-                    className="mt-1 text-xs text-muted-foreground"
-                    style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
-                  >
-                    {product.id}
+                        className="h-10 w-16 cursor-pointer rounded-md border border-input bg-transparent p-1"
+                      />
+                      <Input
+                        value={product.cardBackgroundColor ?? ""}
+                        onChange={(event) =>
+                          updateCardBackgroundColor(product.id, event.target.value)
+                        }
+                        placeholder="#E8EDF3"
+                      />
+                    </div>
                   </div>
                 </div>
-                <Input
-                  value={product.iconUrl ?? ""}
-                  onChange={(event) => updateIconUrl(product.id, event.target.value)}
-                  placeholder="https://example.com/icon.png"
-                  className="mt-3"
-                />
-                <div className="mt-3 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
-                  <input
-                    type="color"
-                    value={normalizeHexColor(product.cardBackgroundColor ?? "") ?? "#E8EDF3"}
-                    onChange={(event) =>
-                      updateCardBackgroundColor(product.id, event.target.value.toUpperCase())
-                    }
-                    className="h-10 w-16 cursor-pointer rounded-md border border-input bg-transparent p-1"
-                  />
-                  <Input
-                    value={product.cardBackgroundColor ?? ""}
-                    onChange={(event) =>
-                      updateCardBackgroundColor(product.id, event.target.value)
-                    }
-                    placeholder="#E8EDF3"
-                  />
-                </div>
               </div>
-            </div>
-          </div>
             );
-          })()
-        ))}
+          })(),
+        )}
       </div>
     </section>
   );
@@ -585,9 +576,7 @@ function SignupBackgroundEditor({
       setSaveMessage("Saved to src/data/home-settings.ts");
     } catch (error) {
       setSaveState("error");
-      setSaveMessage(
-        error instanceof Error ? error.message : "Failed to save signup background",
-      );
+      setSaveMessage(error instanceof Error ? error.message : "Failed to save signup background");
     }
   };
 
@@ -1002,26 +991,54 @@ function HomePage() {
           href={portfolioHref}
           target="_blank"
           rel="noreferrer"
-          className="group mt-3 flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
+          className="group mt-3 flex items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
         >
           <ExternalSiteIcon href={portfolioHref} fallback="P" />
           <div className="flex-1 text-left">
-            <div className="text-sm font-semibold tracking-tight">Portfolio</div>
-            <div className="text-xs text-muted-foreground">Selected works and projects</div>
+            <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              Portfolio
+            </div>
+            <div
+              className="mt-2 flex items-center gap-3 rounded-2xl px-4 py-3"
+              style={
+                portfolioCardStyles
+                  ? {
+                      backgroundColor: portfolioCardStyles.backgroundColor,
+                      color: portfolioCardStyles.textColor,
+                    }
+                  : undefined
+              }
+            >
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold tracking-tight">Selected works</div>
+                <div
+                  className="text-xs text-muted-foreground"
+                  style={
+                    portfolioCardStyles ? { color: portfolioCardStyles.mutedColor } : undefined
+                  }
+                >
+                  Projects, illustrations and visual development
+                </div>
+              </div>
+              <ArrowRight
+                className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+                style={portfolioCardStyles ? { color: portfolioCardStyles.kindColor } : undefined}
+              />
+            </div>
           </div>
-          <ExternalLink className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
         </a>
       </section>
 
       <section className="mt-10">
         <div className="space-y-4">
-          <div
-            className="relative overflow-hidden rounded-2xl bg-[oklch(0.34_0.025_235)] px-6 py-8 text-white sm:px-10 sm:py-10"
-          >
+          <div className="relative overflow-hidden rounded-2xl bg-[oklch(0.34_0.025_235)] px-6 py-8 text-white sm:px-10 sm:py-10">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0"
-              style={{ backgroundColor: normalizeHexColor(signupBackgroundColor) ?? defaultSignupBackgroundColor }}
+              style={{
+                backgroundColor:
+                  normalizeHexColor(signupBackgroundColor) ?? defaultSignupBackgroundColor,
+              }}
             />
             {signupBackgroundImageUrl ? (
               <div
@@ -1104,16 +1121,16 @@ export function ShopPage() {
 
       <section className="mt-5 grid gap-4 sm:grid-cols-2">
         {shopProducts.map((product) => (
-        <ProductTile
-          key={product.id}
-          title={product.title}
-          subtitle={product.description}
-          href={product.href}
-          kind={product.kind}
-          iconUrl={product.iconUrl}
-          cardBackgroundColor={product.cardBackgroundColor}
-          ribbonLabel={product.ribbonLabel}
-        />
+          <ProductTile
+            key={product.id}
+            title={product.title}
+            subtitle={product.description}
+            href={product.href}
+            kind={product.kind}
+            iconUrl={product.iconUrl}
+            cardBackgroundColor={product.cardBackgroundColor}
+            ribbonLabel={product.ribbonLabel}
+          />
         ))}
       </section>
 
@@ -1609,15 +1626,23 @@ function MarkdownEditor({
   );
 }
 
-export function BookPage({ productSlug }: { productSlug?: "artist-kit" | "game-art-guidebook" }) {
+export function BookPage({
+  productSlug,
+}: {
+  productSlug?: "artist-kit" | "game-art-guidebook" | "artist-path-in-gamedev";
+}) {
   const location = useLocation();
   const navigate = useNavigate();
-  const isArtistKitPage =
-    productSlug === "artist-kit"
-      ? true
-      : productSlug === "game-art-guidebook"
-        ? false
-        : location.pathname === "/artist-kit/" || location.pathname === "/artist-kit";
+  const normalizedPath = location.pathname.endsWith("/")
+    ? location.pathname
+    : `${location.pathname}/`;
+  const resolvedProductSlug =
+    productSlug ??
+    (normalizedPath === "/artist-kit/"
+      ? "artist-kit"
+      : normalizedPath === "/courses/artist-path-in-gamedev/"
+        ? "artist-path-in-gamedev"
+        : "game-art-guidebook");
   const searchParams = new URLSearchParams(location.search);
   const fromShop = searchParams.get("from") === "shop";
 
@@ -1633,11 +1658,11 @@ export function BookPage({ productSlug }: { productSlug?: "artist-kit" | "game-a
     try {
       const referrerUrl = new URL(document.referrer);
       const isSameOrigin = referrerUrl.origin === window.location.origin;
-      const normalizedPath = referrerUrl.pathname.endsWith("/")
+      const normalizedReferrerPath = referrerUrl.pathname.endsWith("/")
         ? referrerUrl.pathname
         : `${referrerUrl.pathname}/`;
 
-      if (isSameOrigin && normalizedPath === "/shop/") {
+      if (isSameOrigin && normalizedReferrerPath === "/shop/") {
         backHref = "/shop/";
         backLabel = "Back to shop";
         shouldUseHistoryBack = true;
@@ -1647,29 +1672,42 @@ export function BookPage({ productSlug }: { productSlug?: "artist-kit" | "game-a
     }
   }
 
-  const pageContent = isArtistKitPage
-    ? {
-        title: "Digital Artist's Survival Kit — Ruslan Kim",
-        description:
-          "Книга Ruslan Kim о цифровом рисовании, навыках художника, старте в игровой индустрии и карьерном развитии без лишних иллюзий.",
-        ogTitle: "Digital Artist's Survival Kit — Ruslan Kim",
-        ogDescription:
-          "Практическая книга для digital-художников о навыках, фокусе, выгорании, карьере и работе в CG.",
-        storageKey: "page:/artist-kit",
-        initialMarkdown: digitalArtistSurvivalKitMarkdown,
-        filePath: "src/content/digital-artist-survival-kit.md",
-      }
-    : {
-        title: "Game Art Guidebook — Ruslan Kim",
-        description:
-          "Game Art Guidebook by Ruslan Kim. Learn what a game artist does, how to build skills, and where to start your career path.",
-        ogTitle: "Game Art Guidebook — Ruslan Kim",
-        ogDescription:
-          "A practical guide to a career in game art, with an overview of the book and purchase options.",
-        storageKey: "page:/books/game-art-guidebook",
-        initialMarkdown: bookGameArtGuidebookMarkdown,
-        filePath: "src/content/book-game-art-guidebook.md",
-      };
+  const pageContent =
+    resolvedProductSlug === "artist-kit"
+      ? {
+          title: "Digital Artist's Survival Kit — Ruslan Kim",
+          description:
+            "Книга Ruslan Kim о цифровом рисовании, навыках художника, старте в игровой индустрии и карьерном развитии без лишних иллюзий.",
+          ogTitle: "Digital Artist's Survival Kit — Ruslan Kim",
+          ogDescription:
+            "Практическая книга для digital-художников о навыках, фокусе, выгорании, карьере и работе в CG.",
+          storageKey: "page:/artist-kit",
+          initialMarkdown: digitalArtistSurvivalKitMarkdown,
+          filePath: "src/content/digital-artist-survival-kit.md",
+        }
+      : resolvedProductSlug === "artist-path-in-gamedev"
+        ? {
+            title: "Путь художника в геймдев — Ruslan Kim",
+            description:
+              "Практический мини курс из 6 уроков. Видео + текст. Для начинающих художников которые хотят в игровую индустрию.",
+            ogTitle: "Путь художника в геймдев — Ruslan Kim",
+            ogDescription:
+              "Мини курс для начинающих художников: 6 уроков, видео и текст про вход в игровую индустрию.",
+            storageKey: "page:/courses/artist-path-in-gamedev",
+            initialMarkdown: artistPathInGamedevMarkdown,
+            filePath: "src/content/artist-path-in-gamedev.md",
+          }
+        : {
+            title: "Game Art Guidebook — Ruslan Kim",
+            description:
+              "Game Art Guidebook by Ruslan Kim. Learn what a game artist does, how to build skills, and where to start your career path.",
+            ogTitle: "Game Art Guidebook — Ruslan Kim",
+            ogDescription:
+              "A practical guide to a career in game art, with an overview of the book and purchase options.",
+            storageKey: "page:/books/game-art-guidebook",
+            initialMarkdown: bookGameArtGuidebookMarkdown,
+            filePath: "src/content/book-game-art-guidebook.md",
+          };
 
   usePageMeta({
     title: pageContent.title,
@@ -1760,6 +1798,14 @@ export function App() {
         <Route
           path="/books/game-art-guidebook/"
           element={<BookPage productSlug="game-art-guidebook" />}
+        />
+        <Route
+          path="/courses/artist-path-in-gamedev"
+          element={<BookPage productSlug="artist-path-in-gamedev" />}
+        />
+        <Route
+          path="/courses/artist-path-in-gamedev/"
+          element={<BookPage productSlug="artist-path-in-gamedev" />}
         />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
