@@ -22,6 +22,8 @@ const defaultImageAlignment: ImageAlignment = "center";
 const imagePattern = /!\[([^\]]*)\]\(([^)]+)\)/g;
 const markdownImageLinePattern = /^!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)(?:\s*\{([^}]+)\})?$/i;
 const bareImageLinePattern = /^(https?:\/\/\S+?)(?:\s*\{([^}]+)\})?$/i;
+const markdownLinkPattern = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/i;
+const bareLinkLinePattern = /^https?:\/\/\S+$/i;
 
 function clampImageWidth(width: number) {
   return Math.min(100, Math.max(20, Math.round(width)));
@@ -115,9 +117,10 @@ export function formatImageBlock(image: ImageBlock) {
   const width = clampImageWidth(image.width);
   const align = image.align;
   const indent = " ".repeat(Math.max(0, image.indent));
-  const suffix = width === defaultImageWidth && align === defaultImageAlignment
-    ? ""
-    : ` {width=${width} align=${align}}`;
+  const suffix =
+    width === defaultImageWidth && align === defaultImageAlignment
+      ? ""
+      : ` {width=${width} align=${align}}`;
 
   if (image.alt) {
     return `${indent}![${image.alt}](${image.url})${suffix}`;
@@ -133,6 +136,52 @@ function renderImageBlock(image: ImageBlock) {
   const indentOffset = Math.max(0, image.indent) * 0.75;
 
   return `<div class="markdown-image markdown-image--${safeAlign}" style="--markdown-image-width:${image.width}%;--markdown-image-indent:${indentOffset}rem"><img src="${safeUrl}" alt="${safeAlt}" loading="lazy" decoding="async" /></div>`;
+}
+
+function isGumroadUrl(url: string) {
+  try {
+    const normalizedUrl = new URL(url);
+    return (
+      normalizedUrl.hostname === "gumroad.com" || normalizedUrl.hostname.endsWith(".gumroad.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function parseGumroadButton(line: string) {
+  const trimmed = line.trim();
+
+  if (bareLinkLinePattern.test(trimmed) && isGumroadUrl(trimmed)) {
+    return {
+      href: trimmed,
+      label: "Купить на Gumroad",
+    };
+  }
+
+  const markdownLinkMatch = trimmed.match(markdownLinkPattern);
+
+  if (!markdownLinkMatch) {
+    return null;
+  }
+
+  const [, label, href] = markdownLinkMatch;
+
+  if (!isGumroadUrl(href)) {
+    return null;
+  }
+
+  return {
+    href,
+    label: label.trim() || "Купить на Gumroad",
+  };
+}
+
+function renderGumroadButton(href: string, label: string) {
+  const safeHref = escapeHtml(href);
+  const safeLabel = escapeHtml(label);
+
+  return `<div class="markdown-button-row"><a class="markdown-button markdown-button--gumroad" href="${safeHref}" target="_blank" rel="noreferrer">${safeLabel}</a></div>`;
 }
 
 function renderInline(text: string) {
@@ -161,6 +210,14 @@ export function markdownToHtml(markdown: string) {
 
     if (image) {
       html.push(renderImageBlock(image));
+      paragraph = [];
+      return;
+    }
+
+    const gumroadButton = parseGumroadButton(content);
+
+    if (gumroadButton) {
+      html.push(renderGumroadButton(gumroadButton.href, gumroadButton.label));
       paragraph = [];
       return;
     }

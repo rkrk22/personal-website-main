@@ -1,5 +1,5 @@
 import { type ChangeEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
   AlignCenter,
   AlignLeft,
@@ -17,9 +17,11 @@ import {
   Youtube,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import avatar from "@/assets/avatar.jpg";
 import bookGameArtGuidebookMarkdown from "@/content/book-game-art-guidebook.md?raw";
-import { products } from "@/data/products";
+import digitalArtistSurvivalKitMarkdown from "@/content/digital-artist-survival-kit.md?raw";
+import { type Product, products } from "@/data/products";
 import {
   type ImageAlignment,
   formatImageBlock,
@@ -103,19 +105,39 @@ function ProductCard({
   subtitle,
   href,
   kind,
+  iconUrl,
+  ribbonLabel,
 }: {
   title: string;
   subtitle: string;
   href: string;
   kind: string;
+  iconUrl?: string;
+  ribbonLabel?: string;
 }) {
+  const location = useLocation();
+  const targetHref = location.pathname === "/shop/" ? `${href}?from=shop` : href;
+
   return (
     <a
-      href={href}
-      className="group flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
+      href={targetHref}
+      className="group relative flex items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
     >
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary">
-        <BookOpen className="h-5 w-5 text-foreground" />
+      {ribbonLabel ? (
+        <div className="pointer-events-none absolute right-[-2.55rem] top-[0.45rem] z-10 w-28 rotate-45 bg-[oklch(0.78_0.11_24)] py-1 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
+          {ribbonLabel}
+        </div>
+      ) : null}
+      <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-visible rounded-xl bg-secondary">
+        {iconUrl ? (
+          <img
+            src={iconUrl}
+            alt=""
+            className="pointer-events-none h-[7rem] w-[7rem] scale-[1.35] object-contain"
+          />
+        ) : (
+          <BookOpen className="h-6 w-6 text-foreground" />
+        )}
       </div>
       <div className="flex-1 text-left">
         <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
@@ -134,19 +156,39 @@ function ProductTile({
   subtitle,
   href,
   kind,
+  iconUrl,
+  ribbonLabel,
 }: {
   title: string;
   subtitle: string;
   href: string;
   kind: string;
+  iconUrl?: string;
+  ribbonLabel?: string;
 }) {
+  const location = useLocation();
+  const targetHref = location.pathname === "/shop/" ? `${href}?from=shop` : href;
+
   return (
     <a
-      href={href}
-      className="group flex min-h-64 flex-col rounded-3xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-sm"
+      href={targetHref}
+      className="group relative flex min-h-64 flex-col overflow-hidden rounded-3xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-sm"
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-        <BookOpen className="h-6 w-6 text-foreground" />
+      {ribbonLabel ? (
+        <div className="pointer-events-none absolute right-[-3.35rem] top-[0.65rem] z-10 w-36 rotate-45 bg-[oklch(0.78_0.11_24)] py-1.5 text-center text-[11px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
+          {ribbonLabel}
+        </div>
+      ) : null}
+      <div className="relative flex h-16 w-16 items-center justify-center overflow-visible rounded-[1.35rem] bg-secondary">
+        {iconUrl ? (
+          <img
+            src={iconUrl}
+            alt=""
+            className="pointer-events-none h-[10rem] w-[10rem] scale-[1.4] object-contain"
+          />
+        ) : (
+          <BookOpen className="h-7 w-7 text-foreground" />
+        )}
       </div>
       <div className="mt-8 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
         {kind}
@@ -158,6 +200,120 @@ function ProductTile({
         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
       </div>
     </a>
+  );
+}
+
+function ProductIconEditor({
+  draftProducts,
+  onChange,
+}: {
+  draftProducts: Product[];
+  onChange: (products: Product[]) => void;
+}) {
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveMessage, setSaveMessage] = useState("");
+
+  const updateIconUrl = (id: string, iconUrl: string) => {
+    onChange(
+      draftProducts.map((product) => (product.id === id ? { ...product, iconUrl } : product)),
+    );
+  };
+
+  const resetProducts = () => {
+    onChange(products);
+    setSaveState("idle");
+    setSaveMessage("");
+  };
+
+  const saveProducts = async () => {
+    setSaveState("saving");
+    setSaveMessage("");
+
+    try {
+      const response = await fetch("/__save-products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ products: draftProducts }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Failed to save products");
+      }
+
+      setSaveState("saved");
+      setSaveMessage("Saved to src/data/products.ts");
+    } catch (error) {
+      setSaveState("error");
+      setSaveMessage(error instanceof Error ? error.message : "Failed to save products");
+    }
+  };
+
+  return (
+    <section className="mt-6 rounded-3xl border border-border bg-card p-6 sm:p-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Product Icons</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Вставь ссылку на картинку для товара. Пустое поле оставит стандартную иконку.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={resetProducts}>
+            <RotateCcw className="h-4 w-4" />
+            Reset
+          </Button>
+          <Button onClick={saveProducts} disabled={saveState === "saving"}>
+            {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save"}
+          </Button>
+        </div>
+      </div>
+
+      {saveMessage ? (
+        <p
+          className={`mt-3 text-sm ${
+            saveState === "error" ? "text-destructive" : "text-muted-foreground"
+          }`}
+        >
+          {saveMessage}
+        </p>
+      ) : null}
+
+      <div className="mt-6 space-y-4">
+        {draftProducts.map((product) => (
+          <div
+            key={product.id}
+            className="rounded-2xl border border-border bg-background/60 p-4 sm:p-5"
+          >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="relative flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center overflow-visible rounded-[1.35rem] bg-secondary">
+                {product.iconUrl ? (
+                  <img
+                    src={product.iconUrl}
+                    alt=""
+                    className="pointer-events-none h-[10rem] w-[10rem] scale-[1.4] object-contain"
+                  />
+                ) : (
+                  <BookOpen className="h-7 w-7 text-foreground" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold tracking-tight">{product.title}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{product.id}</div>
+                <Input
+                  value={product.iconUrl ?? ""}
+                  onChange={(event) => updateIconUrl(product.id, event.target.value)}
+                  placeholder="https://example.com/icon.png"
+                  className="mt-3"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -447,6 +603,8 @@ function HomePage() {
               subtitle={product.homeSubtitle ?? product.subtitle}
               href={product.href}
               kind={product.kind}
+              iconUrl={product.iconUrl}
+              ribbonLabel={product.ribbonLabel}
             />
           ))}
         </div>
@@ -494,6 +652,8 @@ function HomePage() {
 }
 
 export function ShopPage() {
+  const [shopProducts, setShopProducts] = useState<Product[]>(products);
+
   usePageMeta({
     title: "Shop — Ruslan Kim",
     description: "Books, products, and resources by Ruslan Kim.",
@@ -519,16 +679,22 @@ export function ShopPage() {
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2">
-        {products.map((product) => (
+        {shopProducts.map((product) => (
           <ProductTile
             key={product.id}
             title={product.title}
             subtitle={product.description}
             href={product.href}
             kind={product.kind}
+            iconUrl={product.iconUrl}
+            ribbonLabel={product.ribbonLabel}
           />
         ))}
       </section>
+
+      {isLocalEditorEnabled ? (
+        <ProductIconEditor draftProducts={shopProducts} onChange={setShopProducts} />
+      ) : null}
 
       <SiteFooter />
     </main>
@@ -585,13 +751,7 @@ function MarkdownEditor({
   initialMarkdown: string;
   filePath: string;
 }) {
-  const [markdown, setMarkdown] = useState(() => {
-    if (typeof window === "undefined") {
-      return initialMarkdown;
-    }
-
-    return window.localStorage.getItem(storageKey) ?? initialMarkdown;
-  });
+  const [markdown, setMarkdown] = useState(initialMarkdown);
   const [mode, setMode] = useState<EditorMode>("preview");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveMessage, setSaveMessage] = useState("");
@@ -762,7 +922,9 @@ function MarkdownEditor({
     setSelectedImage(nextImage ? { lineIndex, value: nextImage } : null);
   };
 
-  const updateSelectedImage = (updater: (current: NonNullable<SelectedImage["value"]>) => string) => {
+  const updateSelectedImage = (
+    updater: (current: NonNullable<SelectedImage["value"]>) => string,
+  ) => {
     if (!selectedImage?.value) {
       return;
     }
@@ -822,9 +984,9 @@ function MarkdownEditor({
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="sticky top-4 z-20 -mx-2 rounded-2xl border border-border bg-card/95 px-2 py-2 backdrop-blur supports-[backdrop-filter]:bg-card/85 sm:-mx-3 sm:px-3">
           <div className="text-sm font-semibold tracking-tight">Editor</div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <Button
               variant={mode === "preview" ? "default" : "outline"}
               onClick={() => setMode("preview")}
@@ -846,201 +1008,278 @@ function MarkdownEditor({
               {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save"}
             </Button>
           </div>
+
+          {saveMessage ? (
+            <p
+              className={`mt-3 text-sm ${
+                saveState === "error" ? "text-destructive" : "text-muted-foreground"
+              }`}
+            >
+              {saveMessage}
+            </p>
+          ) : null}
         </div>
 
-        {saveMessage ? (
-          <p
-            className={`mt-3 text-sm ${
-              saveState === "error" ? "text-destructive" : "text-muted-foreground"
-            }`}
-          >
-            {saveMessage}
-          </p>
-        ) : null}
+        <div className="mt-4 min-w-0">
+          <div className="text-sm font-semibold tracking-tight">Content</div>
 
-        {mode === "edit" ? (
-          <div className="mt-4 space-y-3">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="min-w-16"
-                onClick={() => wrapSelection("**", "**")}
-              >
-                Bold
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="min-w-16"
-                onClick={() => wrapSelection("*", "*")}
-              >
-                Italic
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="min-w-16"
-                onClick={() => insertBlock("# Heading")}
-              >
-                H1
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="min-w-16"
-                onClick={() => insertBlock("## Section")}
-              >
-                H2
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="min-w-16"
-                onClick={() => insertBlock("- List item")}
-              >
-                List
-              </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="min-w-16"
-              onClick={() => insertBlock("[Link text](https://example.com)")}
-              >
-                Link
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="min-w-20"
-                onClick={() => insertBlock("![Image alt](https://example.com/image.jpg)")}
-              >
-                <ImageIcon className="h-4 w-4" />
-                Image
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="min-w-20"
-                onClick={() =>
-                  insertBlock(
-                    '<iframe title="widget" style="border: none" width="180" height="80" src="https://example.com"></iframe>',
-                  )
-                }
-              >
-                Embed
-              </Button>
-            </div>
+          {mode === "edit" ? (
+            <div className="mt-4 space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-w-16"
+                  onClick={() => wrapSelection("**", "**")}
+                >
+                  Bold
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-w-16"
+                  onClick={() => wrapSelection("*", "*")}
+                >
+                  Italic
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-w-16"
+                  onClick={() => insertBlock("# Heading")}
+                >
+                  H1
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-w-16"
+                  onClick={() => insertBlock("## Section")}
+                >
+                  H2
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-w-16"
+                  onClick={() => insertBlock("- List item")}
+                >
+                  List
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-w-16"
+                  onClick={() => insertBlock("[Link text](https://example.com)")}
+                >
+                  Link
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-w-20"
+                  onClick={() => insertBlock("![Image alt](https://example.com/image.jpg)")}
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  Image
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-w-20"
+                  onClick={() =>
+                    insertBlock(
+                      '<iframe title="widget" style="border: none" width="180" height="80" src="https://example.com"></iframe>',
+                    )
+                  }
+                >
+                  Embed
+                </Button>
+              </div>
 
-            {selectedImage?.value ? (
-              <div className="rounded-xl border border-border bg-secondary/30 p-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      Image
+              {selectedImage?.value ? (
+                <div className="rounded-xl border border-border bg-secondary/30 p-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                        Image
+                      </div>
+                      <div className="truncate text-sm text-foreground">
+                        {selectedImage.value.url}
+                      </div>
                     </div>
-                    <div className="truncate text-sm text-foreground">{selectedImage.value.url}</div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant={selectedImage.value.align === "left" ? "default" : "outline"}
+                        onClick={() => setSelectedImageAlignment("left")}
+                      >
+                        <AlignLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={selectedImage.value.align === "center" ? "default" : "outline"}
+                        onClick={() => setSelectedImageAlignment("center")}
+                      >
+                        <AlignCenter className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={selectedImage.value.align === "right" ? "default" : "outline"}
+                        onClick={() => setSelectedImageAlignment("right")}
+                      >
+                        <AlignRight className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant={selectedImage.value.align === "left" ? "default" : "outline"}
-                      onClick={() => setSelectedImageAlignment("left")}
-                    >
-                      <AlignLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={selectedImage.value.align === "center" ? "default" : "outline"}
-                      onClick={() => setSelectedImageAlignment("center")}
-                    >
-                      <AlignCenter className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={selectedImage.value.align === "right" ? "default" : "outline"}
-                      onClick={() => setSelectedImageAlignment("right")}
-                    >
-                      <AlignRight className="h-4 w-4" />
-                    </Button>
+
+                  <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <label className="text-sm text-muted-foreground">Width</label>
+                    <input
+                      type="range"
+                      min="20"
+                      max="100"
+                      step="1"
+                      value={selectedImage.value.width}
+                      onChange={(event) => setSelectedImageWidth(Number(event.target.value))}
+                      className="flex-1"
+                    />
+                    <input
+                      type="number"
+                      min="20"
+                      max="100"
+                      step="1"
+                      value={selectedImage.value.width}
+                      onChange={(event) => setSelectedImageWidth(Number(event.target.value || 100))}
+                      className="w-20 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                    />
+                    <div className="text-sm text-muted-foreground">%</div>
                   </div>
                 </div>
-
-                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <label className="text-sm text-muted-foreground">Width</label>
-                  <input
-                    type="range"
-                    min="20"
-                    max="100"
-                    step="1"
-                    value={selectedImage.value.width}
-                    onChange={(event) => setSelectedImageWidth(Number(event.target.value))}
-                    className="flex-1"
-                  />
-                  <input
-                    type="number"
-                    min="20"
-                    max="100"
-                    step="1"
-                    value={selectedImage.value.width}
-                    onChange={(event) => setSelectedImageWidth(Number(event.target.value || 100))}
-                    className="w-20 rounded-md border border-border bg-background px-3 py-2 text-sm"
-                  />
-                  <div className="text-sm text-muted-foreground">%</div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-border bg-secondary/20 px-4 py-3 text-sm text-muted-foreground">
+                  Поставь курсор на строку с картинкой, чтобы менять ширину и выравнивание.
                 </div>
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed border-border bg-secondary/20 px-4 py-3 text-sm text-muted-foreground">
-                Поставь курсор на строку с картинкой, чтобы менять ширину и выравнивание.
-              </div>
-            )}
+              )}
 
-            <textarea
-              ref={textareaRef}
-              value={markdown}
-              onChange={updateMarkdown}
-              onClick={syncSelectedImageFromTextarea}
-              onKeyUp={syncSelectedImageFromTextarea}
-              onSelect={syncSelectedImageFromTextarea}
-              spellCheck={false}
-              className="min-h-[360px] w-full rounded-xl border border-border bg-background px-4 py-3 text-sm leading-7 outline-none ring-0"
-            />
-          </div>
-        ) : (
-          <div className="mt-4">
-            <MarkdownContent markdown={markdown} />
-          </div>
-        )}
+              <textarea
+                ref={textareaRef}
+                value={markdown}
+                onChange={updateMarkdown}
+                onClick={syncSelectedImageFromTextarea}
+                onKeyUp={syncSelectedImageFromTextarea}
+                onSelect={syncSelectedImageFromTextarea}
+                spellCheck={false}
+                className="min-h-[360px] w-full rounded-xl border border-border bg-background px-4 py-3 text-sm leading-7 outline-none ring-0"
+              />
+            </div>
+          ) : (
+            <div className="mt-4">
+              <MarkdownContent markdown={markdown} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-export function BookPage() {
+export function BookPage({ productSlug }: { productSlug?: "artist-kit" | "game-art-guidebook" }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isArtistKitPage =
+    productSlug === "artist-kit"
+      ? true
+      : productSlug === "game-art-guidebook"
+        ? false
+        : location.pathname === "/artist-kit/" || location.pathname === "/artist-kit";
+  const searchParams = new URLSearchParams(location.search);
+  const fromShop = searchParams.get("from") === "shop";
+
+  let backHref = "/";
+  let backLabel = "Back to home";
+  let shouldUseHistoryBack = false;
+
+  if (fromShop) {
+    backHref = "/shop/";
+    backLabel = "Back to shop";
+    shouldUseHistoryBack = true;
+  } else if (typeof document !== "undefined" && document.referrer) {
+    try {
+      const referrerUrl = new URL(document.referrer);
+      const isSameOrigin = referrerUrl.origin === window.location.origin;
+      const normalizedPath = referrerUrl.pathname.endsWith("/")
+        ? referrerUrl.pathname
+        : `${referrerUrl.pathname}/`;
+
+      if (isSameOrigin && normalizedPath === "/shop/") {
+        backHref = "/shop/";
+        backLabel = "Back to shop";
+        shouldUseHistoryBack = true;
+      }
+    } catch {
+      // Ignore malformed referrers and keep the home fallback.
+    }
+  }
+
+  const pageContent = isArtistKitPage
+    ? {
+        title: "Digital Artist's Survival Kit — Ruslan Kim",
+        description:
+          "Книга Ruslan Kim о цифровом рисовании, навыках художника, старте в игровой индустрии и карьерном развитии без лишних иллюзий.",
+        ogTitle: "Digital Artist's Survival Kit — Ruslan Kim",
+        ogDescription:
+          "Практическая книга для digital-художников о навыках, фокусе, выгорании, карьере и работе в CG.",
+        storageKey: "page:/artist-kit",
+        initialMarkdown: digitalArtistSurvivalKitMarkdown,
+        filePath: "src/content/digital-artist-survival-kit.md",
+      }
+    : {
+        title: "Game Art Guidebook — Ruslan Kim",
+        description:
+          "Game Art Guidebook by Ruslan Kim. Learn what a game artist does, how to build skills, and where to start your career path.",
+        ogTitle: "Game Art Guidebook — Ruslan Kim",
+        ogDescription:
+          "A practical guide to a career in game art, with an overview of the book and purchase options.",
+        storageKey: "page:/books/game-art-guidebook",
+        initialMarkdown: bookGameArtGuidebookMarkdown,
+        filePath: "src/content/book-game-art-guidebook.md",
+      };
+
   usePageMeta({
-    title: "Game Art Guidebook — Ruslan Kim",
-    description:
-      "Game Art Guidebook by Ruslan Kim. Learn what a game artist does, how to build skills, and where to start your career path.",
-    ogTitle: "Game Art Guidebook — Ruslan Kim",
-    ogDescription:
-      "A practical guide to a career in game art, with an overview of the book and purchase options.",
+    title: pageContent.title,
+    description: pageContent.description,
+    ogTitle: pageContent.ogTitle,
+    ogDescription: pageContent.ogDescription,
   });
 
   return (
     <main className="mx-auto max-w-3xl px-6 pb-24 pt-12 sm:pt-16">
-      <a
-        href="/"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to home
-      </a>
+      {shouldUseHistoryBack ? (
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {backLabel}
+        </button>
+      ) : (
+        <a
+          href={backHref}
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {backLabel}
+        </a>
+      )}
 
       <section className="mt-8">
         <MarkdownEditor
-          storageKey="page:/books/game-art-guidebook"
-          initialMarkdown={bookGameArtGuidebookMarkdown}
-          filePath="src/content/book-game-art-guidebook.md"
+          key={pageContent.storageKey}
+          storageKey={pageContent.storageKey}
+          initialMarkdown={pageContent.initialMarkdown}
+          filePath={pageContent.filePath}
         />
       </section>
 
@@ -1087,8 +1326,16 @@ export function App() {
         <Route path="/shop/" element={<ShopPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-        <Route path="/artist-kit/" element={<BookPage />} />
-        <Route path="/books/game-art-guidebook" element={<BookPage />} />
+        <Route path="/artist-kit" element={<BookPage productSlug="artist-kit" />} />
+        <Route path="/artist-kit/" element={<BookPage productSlug="artist-kit" />} />
+        <Route
+          path="/books/game-art-guidebook"
+          element={<BookPage productSlug="game-art-guidebook" />}
+        />
+        <Route
+          path="/books/game-art-guidebook/"
+          element={<BookPage productSlug="game-art-guidebook" />}
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>

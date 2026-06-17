@@ -177,6 +177,19 @@
     @apply text-foreground underline decoration-border underline-offset-4;
   }
 
+  .markdown-content .markdown-button-row {
+    @apply mt-6;
+  }
+
+  .markdown-content .markdown-button {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
+    text-decoration: none;
+  }
+
+  .markdown-content .markdown-button--gumroad {
+    @apply h-10 bg-primary px-8 text-primary-foreground shadow hover:bg-primary/90;
+  }
+
   .markdown-content code {
     @apply rounded bg-secondary px-1.5 py-0.5 text-[0.9em] text-foreground;
   }
