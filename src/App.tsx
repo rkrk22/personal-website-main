@@ -9,10 +9,11 @@ import {
   BookOpen,
   Image as ImageIcon,
   Instagram,
+  Mail,
   Pencil,
   RotateCcw,
-  ShoppingBag,
   Send,
+  ShoppingBag,
   Youtube,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -985,7 +986,7 @@ function HomePage() {
       <div className="flex justify-end">
         <a
           href="/shop/"
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-all hover:border-foreground/30 hover:shadow-sm"
+          className="inline-flex items-center gap-2 rounded-full border border-transparent bg-amber-400 px-4 py-2 text-sm font-medium text-stone-900 transition-all hover:bg-amber-500 hover:shadow-sm"
         >
           <ShoppingBag className="h-4 w-4" />
           Shop
@@ -1106,7 +1107,7 @@ function HomePage() {
             />
             <div className="relative flex flex-col items-center text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/8">
-                <Send className="h-5 w-5" />
+                <Mail className="h-5 w-5" />
               </div>
               <h2 className="mt-4 text-2xl font-semibold tracking-tight">Signup</h2>
               <p className="mt-2 max-w-sm text-sm text-white">
