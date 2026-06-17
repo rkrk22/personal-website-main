@@ -45,6 +45,7 @@ export const products: Product[] = [
     description: "Практический мини курс из 6 уроков. Видео + текст. Для начинающих художников которые хотят в игровую индустрию",
     href: "/courses/artist-path-in-gamedev/",
     kind: "Курс",
-    iconUrl: "https://ik.imagekit.io/71jz3gcgav/%D1%81ourse_icon_Sd4Y4uRyt.gif"
+    iconUrl: "https://ik.imagekit.io/71jz3gcgav/%D1%81ourse_icon_Sd4Y4uRyt.gif",
+    cardBackgroundColor: "#54784A"
   }
 ];

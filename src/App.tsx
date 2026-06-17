@@ -242,9 +242,85 @@ function ProductCard({
           }
         >
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold tracking-tight">{title}</div>
+            <div className="text-lg font-semibold tracking-tight">{title}</div>
             <div
-              className="text-xs text-muted-foreground"
+              className="mt-1 text-base text-muted-foreground"
+              style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
+            >
+              {subtitle}
+            </div>
+          </div>
+          <ArrowRight
+            className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+            style={cardStyles ? { color: cardStyles.kindColor } : undefined}
+          />
+        </div>
+      </div>
+    </a>
+  );
+}
+
+function ShopProductCard({
+  title,
+  subtitle,
+  href,
+  kind,
+  iconUrl,
+  cardBackgroundColor,
+  ribbonLabel,
+}: {
+  title: string;
+  subtitle: string;
+  href: string;
+  kind: string;
+  iconUrl?: string;
+  cardBackgroundColor?: string;
+  ribbonLabel?: string;
+}) {
+  const location = useLocation();
+  const targetHref = location.pathname === "/shop/" ? `${href}?from=shop` : href;
+  const cardStyles = getProductCardStyles(cardBackgroundColor);
+
+  return (
+    <a
+      href={targetHref}
+      className="group relative flex items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:border-foreground/30 hover:shadow-sm"
+    >
+      {ribbonLabel ? (
+        <div className="pointer-events-none absolute right-[-2.55rem] top-[0.45rem] z-10 w-28 rotate-45 bg-[oklch(0.78_0.11_24)] py-1 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
+          {ribbonLabel}
+        </div>
+      ) : null}
+      <div className="relative mt-1 flex h-16 w-16 shrink-0 items-center justify-center overflow-visible rounded-[2rem] bg-secondary/70">
+        {iconUrl ? (
+          <img
+            src={iconUrl}
+            alt=""
+            className="pointer-events-none h-[10rem] w-[10rem] scale-[1.4] rounded-[1.9rem] object-contain"
+          />
+        ) : (
+          <BookOpen className="h-7 w-7 text-foreground" />
+        )}
+      </div>
+      <div className="flex-1 text-left">
+        <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          {kind}
+        </div>
+        <div
+          className="mt-3 flex items-center gap-4 rounded-[1.6rem] px-5 py-5"
+          style={
+            cardStyles
+              ? {
+                  backgroundColor: cardStyles.backgroundColor,
+                  color: cardStyles.textColor,
+                }
+              : undefined
+          }
+        >
+          <div className="min-w-0 flex-1">
+            <div className="text-xl font-semibold tracking-tight">{title}</div>
+            <div
+              className="mt-3 text-sm leading-6 text-muted-foreground"
               style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
             >
               {subtitle}
@@ -1120,18 +1196,32 @@ export function ShopPage() {
       </section>
 
       <section className="mt-5 grid gap-4 sm:grid-cols-2">
-        {shopProducts.map((product) => (
-          <ProductTile
-            key={product.id}
-            title={product.title}
-            subtitle={product.description}
-            href={product.href}
-            kind={product.kind}
-            iconUrl={product.iconUrl}
-            cardBackgroundColor={product.cardBackgroundColor}
-            ribbonLabel={product.ribbonLabel}
-          />
-        ))}
+        {shopProducts.map((product) =>
+          product.kind === "Курс" ? (
+            <div key={product.id} className="sm:col-span-2">
+              <ShopProductCard
+                title={product.title}
+                subtitle={product.description}
+                href={product.href}
+                kind={product.kind}
+                iconUrl={product.iconUrl}
+                cardBackgroundColor={product.cardBackgroundColor}
+                ribbonLabel={product.ribbonLabel}
+              />
+            </div>
+          ) : (
+            <ProductTile
+              key={product.id}
+              title={product.title}
+              subtitle={product.description}
+              href={product.href}
+              kind={product.kind}
+              iconUrl={product.iconUrl}
+              cardBackgroundColor={product.cardBackgroundColor}
+              ribbonLabel={product.ribbonLabel}
+            />
+          ),
+        )}
       </section>
 
       {isLocalEditorEnabled ? (
