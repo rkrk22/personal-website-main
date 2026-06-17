@@ -25,17 +25,17 @@ export const products: Product[] = [
     homeTitle: "Набор для выживания Digital художника",
     homeSubtitle: "PDF книга о рисовании и карьере художника",
     iconUrl: "https://ik.imagekit.io/71jz3gcgav/book_icon1_ucBi8YilUK.gif",
-    cardBackgroundColor: "#F3F7F4",
+    cardBackgroundColor: "#F7F7F7",
     ribbonLabel: "New"
   },
   {
     id: "game-art-guidebook-shop",
     title: "Game Art Guidebook",
     subtitle: "Практическое руководство по карьере в гейм-арте",
-    description: "Практическая книга для будущих game artist'ов о ключевых навыках, профессиональном направлении и построении пути в индустрию.",
+    description: "Практическое руководство для художников в игровой индустрии. Пошаговые уроки, видео-примеры, кисти и исходники",
     href: "/books/game-art-guidebook",
     kind: "Book",
     iconUrl: "https://ik.imagekit.io/71jz3gcgav/book_icons_all_nK58XFLPK.gif",
-    cardBackgroundColor: "#F4F1F3"
+    cardBackgroundColor: "#F7F7F7"
   }
 ];
