@@ -986,7 +986,7 @@ function HomePage() {
       <div className="flex justify-end">
         <a
           href="/shop/"
-          className="inline-flex items-center gap-2 rounded-full border border-transparent bg-amber-400 px-4 py-2 text-sm font-medium text-stone-900 transition-all hover:bg-amber-500 hover:shadow-sm"
+          className="inline-flex items-center gap-2 rounded-full border border-transparent bg-amber-200 px-4 py-2 text-sm font-medium text-stone-900 transition-all hover:bg-amber-300 hover:shadow-sm"
         >
           <ShoppingBag className="h-4 w-4" />
           Shop

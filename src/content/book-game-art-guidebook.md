@@ -79,6 +79,8 @@ https://ik.imagekit.io/71jz3gcgav/Screenshot-2024-03-01-at-12.45.44_tHgoQOYPm.gi
 ## **Что нужно, чтобы оплатить и получить доступ?**
 Просто выберите удобный способ оплаты.
 
+<iframe title="lava.top" style="border: none" width="230" height="50" src="https://widget.lava.top/4c104d9f-2916-4761-83bb-d06f98c2ff3f"></iframe>
+
 https://ruslankim.gumroad.com/l/gameartguidebook
 
 Я хотел бы создать сообщество где мы друг другу помогаем. Поэтому, сразу после оплаты у вас будет доступ к закрытому чату в телеграм. 
