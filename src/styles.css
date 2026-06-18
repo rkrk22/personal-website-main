@@ -153,6 +153,20 @@
 }
 
 @layer components {
+  .shop-course-card-portrait {
+    display: none;
+  }
+
+  @media (max-width: 639px) and (orientation: portrait) {
+    .shop-course-card-portrait {
+      display: block;
+    }
+
+    .shop-course-card-default {
+      display: none;
+    }
+  }
+
   .markdown-content h1 {
     @apply text-3xl font-semibold tracking-tight sm:text-4xl;
   }

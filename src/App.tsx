@@ -190,7 +190,6 @@ function ProductCard({
   kind,
   iconUrl,
   cardBackgroundColor,
-  ribbonLabel,
 }: {
   title: string;
   subtitle: string;
@@ -207,13 +206,8 @@ function ProductCard({
   return (
     <a
       href={targetHref}
-      className="group relative flex items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
+      className="group relative flex min-h-[9rem] items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
     >
-      {ribbonLabel ? (
-        <div className="pointer-events-none absolute right-[-2.55rem] top-[0.45rem] z-10 w-28 rotate-45 bg-[oklch(0.78_0.11_24)] py-1 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
-          {ribbonLabel}
-        </div>
-      ) : null}
       <div className="relative mt-1 flex h-14 w-14 shrink-0 items-center justify-center overflow-visible rounded-[1.75rem] bg-secondary/70">
         {iconUrl ? (
           <img
@@ -230,7 +224,7 @@ function ProductCard({
           {kind}
         </div>
         <div
-          className="mt-2 flex items-center gap-3 rounded-2xl px-4 py-3"
+          className="mt-2 flex h-24 items-center gap-3 rounded-2xl px-4 py-3"
           style={
             cardStyles
               ? {
@@ -241,9 +235,9 @@ function ProductCard({
           }
         >
           <div className="min-w-0 flex-1">
-            <div className="text-lg font-semibold tracking-tight">{title}</div>
+            <div className="line-clamp-2 text-sm font-semibold tracking-tight">{title}</div>
             <div
-              className="mt-1 text-base text-muted-foreground"
+              className="mt-1 line-clamp-1 text-xs text-muted-foreground"
               style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
             >
               {subtitle}
@@ -1174,15 +1168,28 @@ export function ShopPage() {
         {shopProducts.map((product) =>
           product.kind === "Курс" ? (
             <div key={product.id} className="sm:col-span-2">
-              <ShopProductCard
-                title={product.title}
-                subtitle={product.description}
-                href={product.href}
-                kind={product.kind}
-                iconUrl={product.iconUrl}
-                cardBackgroundColor={product.cardBackgroundColor}
-                ribbonLabel={product.ribbonLabel}
-              />
+              <div className="shop-course-card-portrait">
+                <ProductTile
+                  title={product.title}
+                  subtitle={product.description}
+                  href={product.href}
+                  kind={product.kind}
+                  iconUrl={product.iconUrl}
+                  cardBackgroundColor={product.cardBackgroundColor}
+                  ribbonLabel={product.ribbonLabel}
+                />
+              </div>
+              <div className="shop-course-card-default">
+                <ShopProductCard
+                  title={product.title}
+                  subtitle={product.description}
+                  href={product.href}
+                  kind={product.kind}
+                  iconUrl={product.iconUrl}
+                  cardBackgroundColor={product.cardBackgroundColor}
+                  ribbonLabel={product.ribbonLabel}
+                />
+              </div>
             </div>
           ) : (
             <ProductTile
