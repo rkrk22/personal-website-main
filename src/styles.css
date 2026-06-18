@@ -180,11 +180,11 @@
   }
 
   .markdown-content p {
-    @apply mt-4 text-sm leading-7 text-muted-foreground sm:text-base;
+    @apply mt-4 text-base leading-tight text-muted-foreground sm:text-lg;
   }
 
   .markdown-content ul {
-    @apply mt-4 list-disc space-y-2 pl-6 text-sm leading-7 text-muted-foreground sm:text-base;
+    @apply mt-4 list-disc space-y-2 pl-6 text-base leading-tight text-muted-foreground sm:text-lg;
   }
 
   .markdown-content a {
@@ -196,7 +196,7 @@
   }
 
   .markdown-content .markdown-button {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
     text-decoration: none;
   }
 

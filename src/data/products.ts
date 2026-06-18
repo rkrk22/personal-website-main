@@ -25,7 +25,7 @@ export const products: Product[] = [
     homeTitle: "Набор для выживания Digital художника",
     homeSubtitle: "PDF книга о рисовании и карьере художника",
     iconUrl: "https://ik.imagekit.io/71jz3gcgav/book_icon1_ucBi8YilUK.gif",
-    cardBackgroundColor: "#F7F7F7"
+    cardBackgroundColor: "#F4F5EB"
   },
   {
     id: "game-art-guidebook-shop",

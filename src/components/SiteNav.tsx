@@ -10,7 +10,7 @@ export function SiteNav() {
         >
           rk.
         </Link>
-        <div className="flex items-center gap-6 text-sm">
+        <div className="flex items-center gap-6 text-base">
           <NavLink
             to="/"
             end

@@ -146,6 +146,40 @@ function getProductCardStyles(cardBackgroundColor?: string) {
   };
 }
 
+function getTagBadgeStyles(kind: string) {
+  const normalizedKind = kind.trim().toLowerCase();
+
+  if (normalizedKind === "book") {
+    return {
+      backgroundColor: "oklch(0.92 0.06 240)",
+      color: "oklch(0.38 0.12 245)",
+      borderColor: "oklch(0.84 0.05 240)",
+    };
+  }
+
+  if (normalizedKind === "курс") {
+    return {
+      backgroundColor: "oklch(0.92 0.08 145)",
+      color: "oklch(0.42 0.12 150)",
+      borderColor: "oklch(0.84 0.06 145)",
+    };
+  }
+
+  if (normalizedKind === "portfolio") {
+    return {
+      backgroundColor: "oklch(0.94 0.08 85)",
+      color: "oklch(0.48 0.1 70)",
+      borderColor: "oklch(0.88 0.06 85)",
+    };
+  }
+
+  return {
+    backgroundColor: "oklch(0.95 0.01 255)",
+    color: "oklch(0.44 0.03 255)",
+    borderColor: "oklch(0.88 0.01 255)",
+  };
+}
+
 function getSiteIconUrl(href: string) {
   try {
     const { hostname } = new URL(href);
@@ -179,6 +213,19 @@ function ExternalSiteIcon({ href, fallback }: { href: string; fallback: string }
         className="h-7 w-7 rounded-sm object-contain"
         onError={() => setHasError(true)}
       />
+    </div>
+  );
+}
+
+function CardTagBadge({ label }: { label: string }) {
+  const badgeStyles = getTagBadgeStyles(label);
+
+  return (
+    <div
+      className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]"
+      style={badgeStyles}
+    >
+      {label}
     </div>
   );
 }
@@ -220,11 +267,8 @@ function ProductCard({
         )}
       </div>
       <div className="flex-1 text-left">
-        <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-          {kind}
-        </div>
         <div
-          className="mt-2 flex h-24 items-center gap-3 rounded-2xl px-4 py-3"
+          className="flex h-24 items-center gap-3 rounded-2xl px-4 py-3"
           style={
             cardStyles
               ? {
@@ -235,9 +279,11 @@ function ProductCard({
           }
         >
           <div className="min-w-0 flex-1">
-            <div className="line-clamp-2 text-sm font-semibold tracking-tight">{title}</div>
+            <div className="line-clamp-2 text-lg leading-tight font-semibold tracking-tight">
+              {title}
+            </div>
             <div
-              className="mt-1 line-clamp-1 text-xs text-muted-foreground"
+              className="mt-0.5 line-clamp-1 text-[15px] leading-tight text-muted-foreground"
               style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
             >
               {subtitle}
@@ -277,13 +323,11 @@ function ShopProductCard({
   return (
     <a
       href={targetHref}
-      className="group relative flex items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:border-foreground/30 hover:shadow-sm"
+      className="group relative flex items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-6 pt-14 transition-all hover:border-foreground/30 hover:shadow-sm"
     >
-      {ribbonLabel ? (
-        <div className="pointer-events-none absolute right-[-2.55rem] top-[0.45rem] z-10 w-28 rotate-45 bg-[oklch(0.78_0.11_24)] py-1 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
-          {ribbonLabel}
-        </div>
-      ) : null}
+      <div className="absolute right-4 top-4">
+        <CardTagBadge label={kind} />
+      </div>
       <div className="relative mt-1 flex h-16 w-16 shrink-0 items-center justify-center overflow-visible rounded-[2rem] bg-secondary/70">
         {iconUrl ? (
           <img
@@ -296,11 +340,8 @@ function ShopProductCard({
         )}
       </div>
       <div className="flex-1 text-left">
-        <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-          {kind}
-        </div>
         <div
-          className="mt-3 flex items-center gap-4 rounded-[1.6rem] px-5 py-5"
+          className="flex items-center gap-4 rounded-[1.6rem] px-5 py-5"
           style={
             cardStyles
               ? {
@@ -313,7 +354,7 @@ function ShopProductCard({
           <div className="min-w-0 flex-1">
             <div className="text-xl font-semibold tracking-tight">{title}</div>
             <div
-              className="mt-3 text-sm leading-6 text-muted-foreground"
+              className="mt-3 text-base leading-tight text-muted-foreground"
               style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
             >
               {subtitle}
@@ -355,11 +396,9 @@ function ProductTile({
       href={targetHref}
       className="group relative flex min-h-64 flex-col overflow-hidden rounded-3xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-sm"
     >
-      {ribbonLabel ? (
-        <div className="pointer-events-none absolute right-[-3.35rem] top-[0.65rem] z-10 w-36 rotate-45 bg-[oklch(0.78_0.11_24)] py-1.5 text-center text-[11px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
-          {ribbonLabel}
-        </div>
-      ) : null}
+      <div className="absolute right-5 top-5 z-10">
+        <CardTagBadge label={kind} />
+      </div>
       <div className="relative mt-3 flex h-16 w-16 items-center justify-center overflow-visible rounded-[2rem] bg-secondary/70">
         {iconUrl ? (
           <img
@@ -371,11 +410,8 @@ function ProductTile({
           <BookOpen className="h-7 w-7 text-foreground" />
         )}
       </div>
-      <div className="mt-8 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-        {kind}
-      </div>
       <div
-        className="mt-3 flex flex-1 flex-col rounded-[1.6rem] px-5 py-5"
+        className="mt-8 flex flex-1 flex-col rounded-[1.6rem] px-5 py-5"
         style={
           cardStyles
             ? {
@@ -387,12 +423,12 @@ function ProductTile({
       >
         <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
         <p
-          className="mt-3 flex-1 text-sm leading-6 text-muted-foreground"
+          className="mt-3 flex-1 text-base leading-tight text-muted-foreground"
           style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
         >
           {subtitle}
         </p>
-        <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium">
+        <div className="mt-6 inline-flex items-center gap-2 text-base font-medium">
           Open
           <ArrowRight
             className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
@@ -465,7 +501,7 @@ function ProductIconEditor({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Product Icons</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-base text-muted-foreground">
             Вставь ссылку на картинку и при необходимости выбери цвет всей плашки товара.
           </p>
         </div>
@@ -513,7 +549,7 @@ function ProductIconEditor({
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                    <div className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
                       {product.kind}
                     </div>
                     <div
@@ -527,9 +563,9 @@ function ProductIconEditor({
                           : undefined
                       }
                     >
-                      <div className="text-sm font-semibold tracking-tight">{product.title}</div>
+                      <div className="text-base font-semibold tracking-tight">{product.title}</div>
                       <div
-                        className="mt-1 text-xs text-muted-foreground"
+                        className="mt-1 text-sm text-muted-foreground"
                         style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
                       >
                         {product.id}
@@ -653,7 +689,7 @@ function SignupBackgroundEditor({
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h3 className="text-sm font-semibold tracking-tight">Signup Background</h3>
+          <h3 className="text-base font-semibold tracking-tight">Signup Background</h3>
           <p className="mt-1 text-xs text-muted-foreground">
             Ссылка на картинку для фона плашки. Работает только в localhost.
           </p>
@@ -773,7 +809,7 @@ function ScrollToTop() {
 
 function SiteFooter() {
   return (
-    <footer className="mt-16 flex flex-col items-center gap-3 text-center text-xs text-muted-foreground">
+    <footer className="mt-16 flex flex-col items-center gap-3 text-center text-sm text-muted-foreground">
       <div className="flex items-center gap-4">
         <a href="/privacy-policy" className="transition-colors hover:text-foreground">
           Политика конфиденциальности
@@ -800,7 +836,7 @@ function LegalPage({
     <main className="mx-auto max-w-3xl px-6 pb-24 pt-12 sm:pt-16">
       <a
         href="/"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-2 text-base text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         Назад на главную
@@ -808,7 +844,7 @@ function LegalPage({
 
       <section className="mt-8 rounded-3xl border border-border bg-card p-8 sm:p-10">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
-        <p className="mt-3 text-sm text-muted-foreground sm:text-base">{description}</p>
+        <p className="mt-3 text-base text-muted-foreground sm:text-lg">{description}</p>
         <div className="mt-8 space-y-8">
           {sections.map((section) => (
             <article key={section.heading}>
@@ -817,7 +853,7 @@ function LegalPage({
                 {section.paragraphs.map((paragraph) => (
                   <p
                     key={paragraph}
-                    className="text-sm leading-7 text-muted-foreground sm:text-base"
+                    className="text-base leading-tight text-muted-foreground sm:text-lg"
                   >
                     {paragraph}
                   </p>
@@ -996,7 +1032,7 @@ function HomePage() {
           className="h-32 w-32 rounded-full object-cover sm:h-36 sm:w-36"
         />
         <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">Ruslan Kim</h1>
-        <p className="mt-3 text-base text-muted-foreground">
+        <p className="mt-3 text-lg text-muted-foreground">
           Digital artist • Game art educator • Author of Game Art Guidebook
         </p>
 
@@ -1036,15 +1072,12 @@ function HomePage() {
           href={portfolioHref}
           target="_blank"
           rel="noreferrer"
-          className="group mt-3 flex items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
+          className="group relative mt-3 flex min-h-[9rem] items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
         >
           <ExternalSiteIcon href={portfolioHref} fallback="P" />
           <div className="flex-1 text-left">
-            <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-              Portfolio
-            </div>
             <div
-              className="mt-2 flex items-center gap-3 rounded-2xl px-4 py-3"
+              className="flex items-center gap-3 rounded-2xl px-4 py-3"
               style={
                 portfolioCardStyles
                   ? {
@@ -1055,9 +1088,11 @@ function HomePage() {
               }
             >
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold tracking-tight">Selected works</div>
+                <div className="text-lg leading-tight font-semibold tracking-tight">
+                  Selected works
+                </div>
                 <div
-                  className="text-xs text-muted-foreground"
+                  className="mt-0.5 text-[15px] leading-tight text-muted-foreground"
                   style={
                     portfolioCardStyles ? { color: portfolioCardStyles.mutedColor } : undefined
                   }
@@ -1104,7 +1139,7 @@ function HomePage() {
                 <Mail className="h-5 w-5" />
               </div>
               <h2 className="mt-4 text-2xl font-semibold tracking-tight">Signup</h2>
-              <p className="mt-2 max-w-sm text-sm text-white">
+              <p className="mt-2 max-w-sm text-base text-white">
                 Notes on game art, digital painting and the creative process.
               </p>
               <a
@@ -1151,7 +1186,7 @@ export function ShopPage() {
     <main className="mx-auto max-w-3xl px-6 pb-24 pt-8 sm:pt-10">
       <a
         href="/"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-2 text-base text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to home
@@ -1159,7 +1194,7 @@ export function ShopPage() {
 
       <section className="mt-5">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Shop</h1>
-        <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+        <p className="mt-2 text-base text-muted-foreground sm:text-lg">
           Books, products, and resources in one place.
         </p>
       </section>
@@ -1499,7 +1534,7 @@ function MarkdownEditor({
     <div className="space-y-6">
       <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
         <div className="sticky top-4 z-20 -mx-2 rounded-2xl border border-border bg-card/95 px-2 py-2 backdrop-blur supports-[backdrop-filter]:bg-card/85 sm:-mx-3 sm:px-3">
-          <div className="text-sm font-semibold tracking-tight">Editor</div>
+          <div className="text-base font-semibold tracking-tight">Editor</div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <Button
               variant={mode === "preview" ? "default" : "outline"}
@@ -1535,7 +1570,7 @@ function MarkdownEditor({
         </div>
 
         <div className="mt-4 min-w-0">
-          <div className="text-sm font-semibold tracking-tight">Content</div>
+          <div className="text-base font-semibold tracking-tight">Content</div>
 
           {mode === "edit" ? (
             <div className="mt-4 space-y-3">
@@ -1615,10 +1650,10 @@ function MarkdownEditor({
                 <div className="rounded-xl border border-border bg-secondary/30 p-3">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
-                      <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      <div className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                         Image
                       </div>
-                      <div className="truncate text-sm text-foreground">
+                      <div className="truncate text-base text-foreground">
                         {selectedImage.value.url}
                       </div>
                     </div>
@@ -1648,7 +1683,7 @@ function MarkdownEditor({
                   </div>
 
                   <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <label className="text-sm text-muted-foreground">Width</label>
+                    <label className="text-base text-muted-foreground">Width</label>
                     <input
                       type="range"
                       min="20"
@@ -1667,11 +1702,11 @@ function MarkdownEditor({
                       onChange={(event) => setSelectedImageWidth(Number(event.target.value || 100))}
                       className="w-20 rounded-md border border-border bg-background px-3 py-2 text-sm"
                     />
-                    <div className="text-sm text-muted-foreground">%</div>
+                    <div className="text-base text-muted-foreground">%</div>
                   </div>
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed border-border bg-secondary/20 px-4 py-3 text-sm text-muted-foreground">
+                <div className="rounded-xl border border-dashed border-border bg-secondary/20 px-4 py-3 text-base text-muted-foreground">
                   Поставь курсор на строку с картинкой, чтобы менять ширину и выравнивание.
                 </div>
               )}
@@ -1684,7 +1719,7 @@ function MarkdownEditor({
                 onKeyUp={syncSelectedImageFromTextarea}
                 onSelect={syncSelectedImageFromTextarea}
                 spellCheck={false}
-                className="min-h-[360px] w-full rounded-xl border border-border bg-background px-4 py-3 text-sm leading-7 outline-none ring-0"
+                className="min-h-[360px] w-full rounded-xl border border-border bg-background px-4 py-3 text-sm leading-tight outline-none ring-0"
               />
             </div>
           ) : (
@@ -1794,7 +1829,7 @@ export function BookPage({
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-2 text-base text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           {backLabel}
@@ -1802,7 +1837,7 @@ export function BookPage({
       ) : (
         <a
           href={backHref}
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-2 text-base text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           {backLabel}
@@ -1836,7 +1871,7 @@ function NotFoundPage() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-base text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6">
