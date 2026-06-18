@@ -31,6 +31,7 @@ type HomeSettingsRecord = {
   signupBackgroundImageUrl?: string;
   signupBackgroundColor?: string;
   signupButtonColor?: string;
+  portfolioIconUrl?: string;
 };
 
 function serializeProductsModule(products: ProductRecord[]) {
@@ -68,6 +69,7 @@ function serializeHomeSettingsModule(settings: HomeSettingsRecord) {
   signupBackgroundImageUrl?: string;
   signupBackgroundColor?: string;
   signupButtonColor?: string;
+  portfolioIconUrl?: string;
 };
 
 export const homeSettings: HomeSettings = ${serialized};
@@ -197,6 +199,7 @@ function markdownSavePlugin(): PluginOption {
             signupBackgroundImageUrl?: string;
             signupBackgroundColor?: string;
             signupButtonColor?: string;
+            portfolioIconUrl?: string;
           };
 
           if (
@@ -226,10 +229,20 @@ function markdownSavePlugin(): PluginOption {
             return;
           }
 
+          if (
+            typeof body.portfolioIconUrl !== "string" &&
+            typeof body.portfolioIconUrl !== "undefined"
+          ) {
+            res.statusCode = 400;
+            res.end("Invalid payload");
+            return;
+          }
+
           const sanitizedSettings: HomeSettingsRecord = {
             signupBackgroundImageUrl: body.signupBackgroundImageUrl?.trim() || undefined,
             signupBackgroundColor: body.signupBackgroundColor?.trim() || undefined,
             signupButtonColor: body.signupButtonColor?.trim() || undefined,
+            portfolioIconUrl: body.portfolioIconUrl?.trim() || undefined,
           };
 
           await fs.writeFile(

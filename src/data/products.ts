@@ -24,7 +24,7 @@ export const products: Product[] = [
     featuredOnHome: true,
     homeTitle: "Набор для выживания Digital художника",
     homeSubtitle: "PDF книга о рисовании и карьере художника",
-    iconUrl: "https://ik.imagekit.io/71jz3gcgav/book_icon1_ucBi8YilUK.gif",
+    iconUrl: "https://ik.imagekit.io/71jz3gcgav/book-icon-2_t77v_HA2q.gif",
     cardBackgroundColor: "#F4F5EB"
   },
   {

@@ -189,9 +189,17 @@ function getSiteIconUrl(href: string) {
   }
 }
 
-function ExternalSiteIcon({ href, fallback }: { href: string; fallback: string }) {
+function ExternalSiteIcon({
+  href,
+  fallback,
+  iconUrlOverride,
+}: {
+  href: string;
+  fallback: string;
+  iconUrlOverride?: string;
+}) {
   const [hasError, setHasError] = useState(false);
-  const iconUrl = getSiteIconUrl(href);
+  const iconUrl = iconUrlOverride?.trim() || getSiteIconUrl(href);
 
   useEffect(() => {
     setHasError(false);
@@ -199,21 +207,128 @@ function ExternalSiteIcon({ href, fallback }: { href: string; fallback: string }
 
   if (!iconUrl || hasError) {
     return (
-      <div className="relative mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.75rem] text-sm font-semibold">
+      <div className="relative mt-1 flex h-24 w-[5.5rem] shrink-0 items-center justify-center text-sm font-semibold">
         {fallback}
       </div>
     );
   }
 
   return (
-    <div className="relative mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.75rem]">
+    <div className="relative mt-1 flex h-24 w-[5.5rem] shrink-0 items-center justify-center">
       <img
         src={iconUrl}
         alt=""
-        className="h-7 w-7 rounded-sm object-contain"
+        className="h-24 w-24 rounded-[1.75rem] object-contain"
         onError={() => setHasError(true)}
       />
     </div>
+  );
+}
+
+function PortfolioIconEditor({
+  value,
+  signupBackgroundImageUrl,
+  signupBackgroundColor,
+  signupButtonColor,
+  onChange,
+}: {
+  value: string;
+  signupBackgroundImageUrl: string;
+  signupBackgroundColor: string;
+  signupButtonColor: string;
+  onChange: (value: string) => void;
+}) {
+  const [draftValue, setDraftValue] = useState(value);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveMessage, setSaveMessage] = useState("");
+
+  useEffect(() => {
+    setDraftValue(value);
+  }, [value]);
+
+  const resetValue = () => {
+    const nextValue = homeSettings.portfolioIconUrl ?? "";
+    setDraftValue(nextValue);
+    onChange(nextValue);
+    setSaveState("idle");
+    setSaveMessage("");
+  };
+
+  const saveValue = async () => {
+    setSaveState("saving");
+    setSaveMessage("");
+
+    try {
+      const response = await fetch("/__save-home-settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          signupBackgroundImageUrl,
+          signupBackgroundColor,
+          signupButtonColor,
+          portfolioIconUrl: draftValue,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Failed to save portfolio icon");
+      }
+
+      onChange(draftValue.trim());
+      setSaveState("saved");
+      setSaveMessage("Saved to src/data/home-settings.ts");
+    } catch (error) {
+      setSaveState("error");
+      setSaveMessage(error instanceof Error ? error.message : "Failed to save portfolio icon");
+    }
+  };
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h3 className="text-base font-semibold tracking-tight">Portfolio Icon</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Ссылка на картинку для иконки Portfolio. Работает только в localhost.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={resetValue}>
+            <RotateCcw className="h-4 w-4" />
+            Reset
+          </Button>
+          <Button onClick={saveValue} disabled={saveState === "saving"}>
+            {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save"}
+          </Button>
+        </div>
+      </div>
+
+      {saveMessage ? (
+        <p
+          className={`mt-3 text-sm ${
+            saveState === "error" ? "text-destructive" : "text-muted-foreground"
+          }`}
+        >
+          {saveMessage}
+        </p>
+      ) : null}
+
+      <Input
+        value={draftValue}
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          setDraftValue(nextValue);
+          onChange(nextValue.trim());
+          setSaveState("idle");
+          setSaveMessage("");
+        }}
+        placeholder="https://example.com/portfolio-icon.png"
+        className="mt-4"
+      />
+    </section>
   );
 }
 
@@ -1002,6 +1117,7 @@ function HomePage() {
   const [signupButtonColor, setSignupButtonColor] = useState(
     homeSettings.signupButtonColor ?? defaultSignupButtonColor,
   );
+  const [portfolioIconUrl, setPortfolioIconUrl] = useState(homeSettings.portfolioIconUrl ?? "");
 
   usePageMeta({
     title: "Ruslan Kim — Digital Artist & Game Art Educator",
@@ -1074,10 +1190,10 @@ function HomePage() {
           rel="noreferrer"
           className="group relative mt-3 flex min-h-[9rem] items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
         >
-          <ExternalSiteIcon href={portfolioHref} fallback="P" />
+          <ExternalSiteIcon href={portfolioHref} fallback="P" iconUrlOverride={portfolioIconUrl} />
           <div className="flex-1 text-left">
             <div
-              className="flex items-center gap-3 rounded-2xl px-4 py-3"
+              className="flex h-24 items-center gap-3 rounded-2xl px-4 py-3"
               style={
                 portfolioCardStyles
                   ? {
@@ -1088,11 +1204,11 @@ function HomePage() {
               }
             >
               <div className="min-w-0 flex-1">
-                <div className="text-lg leading-tight font-semibold tracking-tight">
+                <div className="line-clamp-2 text-lg leading-tight font-semibold tracking-tight">
                   Selected works
                 </div>
                 <div
-                  className="mt-0.5 text-[15px] leading-tight text-muted-foreground"
+                  className="mt-0.5 line-clamp-1 text-[15px] leading-tight text-muted-foreground"
                   style={
                     portfolioCardStyles ? { color: portfolioCardStyles.mutedColor } : undefined
                   }
@@ -1107,11 +1223,20 @@ function HomePage() {
             </div>
           </div>
         </a>
+        {isLocalEditorEnabled ? (
+          <PortfolioIconEditor
+            value={portfolioIconUrl}
+            signupBackgroundImageUrl={signupBackgroundImageUrl}
+            signupBackgroundColor={signupBackgroundColor}
+            signupButtonColor={signupButtonColor}
+            onChange={setPortfolioIconUrl}
+          />
+        ) : null}
       </section>
 
       <section className="mt-10">
         <div className="space-y-4">
-          <div className="relative overflow-hidden rounded-2xl bg-[oklch(0.34_0.025_235)] px-6 py-8 text-white sm:px-10 sm:py-10">
+          <div className="relative overflow-hidden rounded-2xl bg-[oklch(0.34_0.025_235)] px-6 py-5 text-white sm:px-10 sm:py-6">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0"
@@ -1120,38 +1245,41 @@ function HomePage() {
                   normalizeHexColor(signupBackgroundColor) ?? defaultSignupBackgroundColor,
               }}
             />
-            {signupBackgroundImageUrl ? (
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-[0.58]"
-                style={{ backgroundImage: `url("${signupBackgroundImageUrl}")` }}
-              />
-            ) : null}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0"
               style={{
-                backgroundImage: `linear-gradient(180deg, ${hexToRgba(signupBackgroundColor, 0.68)}, ${hexToRgba(signupBackgroundColor, 0.78)})`,
+                backgroundImage: `linear-gradient(180deg, ${hexToRgba(signupBackgroundColor, 0)}, ${hexToRgba(signupBackgroundColor, 0)})`,
               }}
             />
-            <div className="relative flex flex-col items-center text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/8">
-                <Mail className="h-5 w-5" />
+            <div className="relative grid gap-4 md:min-h-[15.5rem] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-0">
+              <div className="relative z-10 min-w-0 text-left">
+                <h2 className="text-2xl font-semibold tracking-tight text-black">Signup</h2>
+                <p className="mt-2 text-base text-black">
+                  Notes on game art, digital painting and the creative process.
+                </p>
+                <a
+                  href="/signup/"
+                  className="mt-5 inline-flex items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
+                  style={{
+                    backgroundColor:
+                      normalizeHexColor(signupButtonColor) ?? defaultSignupButtonColor,
+                    color: getContrastingTextColor(signupButtonColor),
+                  }}
+                >
+                  Sign up
+                </a>
               </div>
-              <h2 className="mt-4 text-2xl font-semibold tracking-tight">Signup</h2>
-              <p className="mt-2 max-w-sm text-base text-white">
-                Notes on game art, digital painting and the creative process.
-              </p>
-              <a
-                href="/signup/"
-                className="mt-5 inline-flex items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
-                style={{
-                  backgroundColor: normalizeHexColor(signupButtonColor) ?? defaultSignupButtonColor,
-                  color: getContrastingTextColor(signupButtonColor),
-                }}
-              >
-                Sign up
-              </a>
+              {signupBackgroundImageUrl ? (
+                <div className="flex justify-center md:-mr-8 md:-ml-10 md:justify-end">
+                  <img
+                    aria-hidden="true"
+                    alt=""
+                    src={signupBackgroundImageUrl}
+                    className="h-52 w-full min-w-[17rem] max-w-[19rem] object-contain md:h-[15rem] md:w-[16.5rem] md:max-w-none"
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
           {isLocalEditorEnabled ? (
