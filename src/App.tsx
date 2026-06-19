@@ -31,6 +31,7 @@ import {
   markdownToHtml,
   parseImageBlock,
 } from "@/lib/markdown";
+import { cn } from "@/lib/utils";
 
 type MetaDefinition = {
   title: string;
@@ -210,10 +211,12 @@ function ExternalSiteIcon({
   href,
   fallback,
   iconUrlOverride,
+  imageClassName,
 }: {
   href: string;
   fallback: string;
   iconUrlOverride?: string;
+  imageClassName?: string;
 }) {
   const [hasError, setHasError] = useState(false);
   const iconUrl = iconUrlOverride?.trim() || getSiteIconUrl(href);
@@ -235,7 +238,7 @@ function ExternalSiteIcon({
       <img
         src={iconUrl}
         alt=""
-        className="h-48 w-48 rounded-[3rem] object-contain"
+        className={cn("h-48 w-48 rounded-[3rem] object-contain", imageClassName)}
         onError={() => setHasError(true)}
       />
     </div>
@@ -1209,7 +1212,12 @@ function HomePage() {
           rel="noreferrer"
           className="group relative mt-3 flex min-h-[9rem] items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
         >
-          <ExternalSiteIcon href={portfolioHref} fallback="P" iconUrlOverride={portfolioIconUrl} />
+          <ExternalSiteIcon
+            href={portfolioHref}
+            fallback="P"
+            iconUrlOverride={portfolioIconUrl}
+            imageClassName="h-56 w-56"
+          />
           <div className="flex-1 text-left">
             <div
               className="flex h-24 items-center gap-3 px-4 py-3"
