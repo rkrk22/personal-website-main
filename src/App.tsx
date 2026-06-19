@@ -207,18 +207,18 @@ function ExternalSiteIcon({
 
   if (!iconUrl || hasError) {
     return (
-      <div className="relative mt-1 flex h-24 w-[5.5rem] shrink-0 items-center justify-center text-sm font-semibold">
+      <div className="relative mt-1 flex h-24 w-14 shrink-0 items-center justify-center text-sm font-semibold">
         {fallback}
       </div>
     );
   }
 
   return (
-    <div className="relative mt-1 flex h-24 w-[5.5rem] shrink-0 items-center justify-center">
+    <div className="relative mt-1 flex h-24 w-14 shrink-0 items-center justify-center overflow-visible">
       <img
         src={iconUrl}
         alt=""
-        className="h-24 w-24 rounded-[1.75rem] object-contain"
+        className="h-48 w-48 rounded-[3rem] object-contain"
         onError={() => setHasError(true)}
       />
     </div>
@@ -394,11 +394,11 @@ function ProductCard({
           }
         >
           <div className="min-w-0 flex-1">
-            <div className="line-clamp-2 text-lg leading-tight font-semibold tracking-tight">
+            <div className="break-words text-lg leading-tight font-semibold tracking-tight">
               {title}
             </div>
             <div
-              className="mt-0.5 line-clamp-1 text-[15px] leading-tight text-muted-foreground"
+              className="mt-0.5 break-words text-[15px] leading-tight text-muted-foreground"
               style={cardStyles ? { color: cardStyles.mutedColor } : undefined}
             >
               {subtitle}
@@ -1193,27 +1193,26 @@ function HomePage() {
           <ExternalSiteIcon href={portfolioHref} fallback="P" iconUrlOverride={portfolioIconUrl} />
           <div className="flex-1 text-left">
             <div
-              className="flex h-24 items-center gap-3 rounded-2xl px-4 py-3"
+              className="flex h-24 items-center gap-3 px-4 py-3"
               style={
                 portfolioCardStyles
                   ? {
-                      backgroundColor: portfolioCardStyles.backgroundColor,
                       color: portfolioCardStyles.textColor,
                     }
                   : undefined
               }
             >
               <div className="min-w-0 flex-1">
-                <div className="line-clamp-2 text-lg leading-tight font-semibold tracking-tight">
-                  Selected works
+                <div className="break-words text-lg leading-tight font-semibold tracking-tight">
+                  Портфолио
                 </div>
                 <div
-                  className="mt-0.5 line-clamp-1 text-[15px] leading-tight text-muted-foreground"
+                  className="mt-0.5 break-words text-[15px] leading-tight text-muted-foreground"
                   style={
                     portfolioCardStyles ? { color: portfolioCardStyles.mutedColor } : undefined
                   }
                 >
-                  Projects, illustrations and visual development
+                  Если вам интересно посмотреть на мои работы
                 </div>
               </div>
               <ArrowRight
@@ -1254,9 +1253,14 @@ function HomePage() {
             />
             <div className="relative grid gap-4 md:min-h-[15.5rem] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-0">
               <div className="relative z-10 min-w-0 text-left">
-                <h2 className="text-2xl font-semibold tracking-tight text-black">Signup</h2>
-                <p className="mt-2 text-base text-black">
-                  Notes on game art, digital painting and the creative process.
+                <h2 className="text-2xl font-semibold tracking-tight text-black">
+                  <span className="leading-[1.05]">
+                  У меня есть рассылка
+                  </span>
+                </h2>
+                <p className="mt-2 text-[15px] leading-snug text-black">
+                  Если подпишетесь, то мы с вами никогда не потеряемся из виду. Я буду присылать
+                  вам полезности для художников, давать поддержку и иногда предлагать скидки 💛
                 </p>
                 <a
                   href="/signup/"
@@ -1271,7 +1275,7 @@ function HomePage() {
                 </a>
               </div>
               {signupBackgroundImageUrl ? (
-                <div className="flex justify-center md:-mr-8 md:-ml-10 md:justify-end">
+                <div className="flex justify-center md:-mr-12 md:-ml-10 md:justify-end">
                   <img
                     aria-hidden="true"
                     alt=""
