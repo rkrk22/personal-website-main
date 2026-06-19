@@ -1253,7 +1253,7 @@ function HomePage() {
             />
             <div className="relative grid gap-4 md:min-h-[15.5rem] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-0">
               <div className="relative z-10 min-w-0 text-left">
-                <h2 className="text-2xl font-semibold tracking-tight text-black">
+                <h2 className="text-[1.4rem] font-semibold tracking-tight text-black">
                   <span className="leading-[1.05]">
                   У меня есть рассылка
                   </span>
