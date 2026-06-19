@@ -15,6 +15,17 @@ export type Product = {
 
 export const products: Product[] = [
   {
+    id: "gamedev-artist-bundle",
+    title: "Бандл",
+    subtitle: "Три продукта в одном наборе для старта и системного развития",
+    description: "В бандл входят Game Art Guidebook, Набор для выживания диджитал художника и мини-курс «Путь художника в геймдев».",
+    href: "/bundles/gamedev-artist/",
+    kind: "Бандл",
+    ribbonLabel: "Выгодно",
+    iconUrl: "https://ik.imagekit.io/71jz3gcgav/book-icon2_ZNy-2EuWF.gif",
+    cardBackgroundColor: "#EEE7D8"
+  },
+  {
     id: "game-art-guidebook",
     title: "Digital Artist's Survival Kit",
     subtitle: "Честный гид по цифровому рисованию и старту в игровой индустрии",
@@ -24,7 +35,7 @@ export const products: Product[] = [
     featuredOnHome: true,
     homeTitle: "Набор для выживания Digital художника",
     homeSubtitle: "PDF книга о рисовании и карьере художника",
-    iconUrl: "https://ik.imagekit.io/71jz3gcgav/book-icon-2_t77v_HA2q.gif",
+    iconUrl: "https://ik.imagekit.io/71jz3gcgav/book-icon-2_Tb0lux1uA.gif",
     cardBackgroundColor: "#F4F5EB"
   },
   {

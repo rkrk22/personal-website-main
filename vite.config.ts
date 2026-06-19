@@ -275,6 +275,7 @@ export default defineConfig({
       input: {
         main: path.resolve(rootDir, "index.html"),
         artistKit: path.resolve(rootDir, "artist-kit/index.html"),
+        gamedevArtistBundle: path.resolve(rootDir, "bundles/gamedev-artist/index.html"),
         bookGameArtGuidebook: path.resolve(rootDir, "books/game-art-guidebook/index.html"),
         artistPathInGamedev: path.resolve(rootDir, "courses/artist-path-in-gamedev/index.html"),
         privacyPolicy: path.resolve(rootDir, "privacy-policy/index.html"),

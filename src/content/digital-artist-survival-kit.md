@@ -1,4 +1,4 @@
-https://ik.imagekit.io/71jz3gcgav/book_icon1_ucBi8YilUK.gif {width=53 align=center}
+https://ik.imagekit.io/71jz3gcgav/book-icon-2_Tb0lux1uA.gif {width=53 align=center}
 
 # Набор для выживания диджитал художника
 Digital Artist's Survival Kit

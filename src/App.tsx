@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import avatar from "@/assets/avatar.jpg";
 import artistPathInGamedevMarkdown from "@/content/artist-path-in-gamedev.md?raw";
 import bookGameArtGuidebookMarkdown from "@/content/book-game-art-guidebook.md?raw";
+import gamedevArtistBundleMarkdown from "@/content/gamedev-artist-bundle.md?raw";
 import digitalArtistSurvivalKitMarkdown from "@/content/digital-artist-survival-kit.md?raw";
 import { homeSettings } from "@/data/home-settings";
 import { type Product, products } from "@/data/products";
@@ -162,6 +163,22 @@ function getTagBadgeStyles(kind: string) {
       backgroundColor: "oklch(0.92 0.08 145)",
       color: "oklch(0.42 0.12 150)",
       borderColor: "oklch(0.84 0.06 145)",
+    };
+  }
+
+  if (normalizedKind === "бандл") {
+    return {
+      backgroundColor: "oklch(0.95 0.04 85)",
+      color: "oklch(0.45 0.08 68)",
+      borderColor: "oklch(0.89 0.04 85)",
+    };
+  }
+
+  if (normalizedKind === "выгодно") {
+    return {
+      backgroundColor: "oklch(0.94 0.05 12)",
+      color: "oklch(0.5 0.11 18)",
+      borderColor: "oklch(0.88 0.04 12)",
     };
   }
 
@@ -440,7 +457,8 @@ function ShopProductCard({
       href={targetHref}
       className="group relative flex items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-6 pt-14 transition-all hover:border-foreground/30 hover:shadow-sm"
     >
-      <div className="absolute right-4 top-4">
+      <div className="absolute right-4 top-4 flex flex-wrap justify-end gap-2">
+        {ribbonLabel ? <CardTagBadge label={ribbonLabel} /> : null}
         <CardTagBadge label={kind} />
       </div>
       <div className="relative mt-1 flex h-16 w-16 shrink-0 items-center justify-center overflow-visible rounded-[2rem] bg-secondary/70">
@@ -511,7 +529,8 @@ function ProductTile({
       href={targetHref}
       className="group relative flex min-h-64 flex-col overflow-hidden rounded-3xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-sm"
     >
-      <div className="absolute right-5 top-5 z-10">
+      <div className="absolute right-5 top-5 z-10 flex flex-wrap justify-end gap-2">
+        {ribbonLabel ? <CardTagBadge label={ribbonLabel} /> : null}
         <CardTagBadge label={kind} />
       </div>
       <div className="relative mt-3 flex h-16 w-16 items-center justify-center overflow-visible rounded-[2rem] bg-secondary/70">
@@ -1333,7 +1352,7 @@ export function ShopPage() {
 
       <section className="mt-5 grid gap-4 sm:grid-cols-2">
         {shopProducts.map((product) =>
-          product.kind === "Курс" ? (
+          product.kind === "Курс" || product.id === "gamedev-artist-bundle" ? (
             <div key={product.id} className="sm:col-span-2">
               <div className="shop-course-card-portrait">
                 <ProductTile
@@ -1868,7 +1887,11 @@ function MarkdownEditor({
 export function BookPage({
   productSlug,
 }: {
-  productSlug?: "artist-kit" | "game-art-guidebook" | "artist-path-in-gamedev";
+  productSlug?:
+    | "artist-kit"
+    | "game-art-guidebook"
+    | "artist-path-in-gamedev"
+    | "gamedev-artist-bundle";
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -1881,6 +1904,8 @@ export function BookPage({
       ? "artist-kit"
       : normalizedPath === "/courses/artist-path-in-gamedev/"
         ? "artist-path-in-gamedev"
+        : normalizedPath === "/bundles/gamedev-artist/"
+          ? "gamedev-artist-bundle"
         : "game-art-guidebook");
   const searchParams = new URLSearchParams(location.search);
   const fromShop = searchParams.get("from") === "shop";
@@ -1936,6 +1961,18 @@ export function BookPage({
             initialMarkdown: artistPathInGamedevMarkdown,
             filePath: "src/content/artist-path-in-gamedev.md",
           }
+        : resolvedProductSlug === "gamedev-artist-bundle"
+          ? {
+              title: "Бандл для художника в геймдев — Ruslan Kim",
+              description:
+                "Бандл из трех продуктов для художников: Game Art Guidebook, Набор для выживания диджитал художника и мини-курс «Путь художника в геймдев».",
+              ogTitle: "Бандл для художника в геймдев — Ruslan Kim",
+              ogDescription:
+                "Комплект для старта и развития в game art: книга, guidebook и мини-курс в одном наборе.",
+              storageKey: "page:/bundles/gamedev-artist",
+              initialMarkdown: gamedevArtistBundleMarkdown,
+              filePath: "src/content/gamedev-artist-bundle.md",
+            }
         : {
             title: "Game Art Guidebook — Ruslan Kim",
             description:
@@ -2030,6 +2067,14 @@ export function App() {
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
         <Route path="/artist-kit" element={<BookPage productSlug="artist-kit" />} />
         <Route path="/artist-kit/" element={<BookPage productSlug="artist-kit" />} />
+        <Route
+          path="/bundles/gamedev-artist"
+          element={<BookPage productSlug="gamedev-artist-bundle" />}
+        />
+        <Route
+          path="/bundles/gamedev-artist/"
+          element={<BookPage productSlug="gamedev-artist-bundle" />}
+        />
         <Route
           path="/books/game-art-guidebook"
           element={<BookPage productSlug="game-art-guidebook" />}
