@@ -32,6 +32,7 @@ type HomeSettingsRecord = {
   signupBackgroundColor?: string;
   signupButtonColor?: string;
   portfolioIconUrl?: string;
+  shopBackgroundColor?: string;
 };
 
 type CreateNotePayload = {
@@ -77,6 +78,7 @@ function serializeHomeSettingsModule(settings: HomeSettingsRecord) {
   signupBackgroundColor?: string;
   signupButtonColor?: string;
   portfolioIconUrl?: string;
+  shopBackgroundColor?: string;
 };
 
 export const homeSettings: HomeSettings = ${serialized};
@@ -295,6 +297,7 @@ readTime: ${readTime}
             signupBackgroundColor?: string;
             signupButtonColor?: string;
             portfolioIconUrl?: string;
+            shopBackgroundColor?: string;
           };
 
           if (
@@ -333,11 +336,21 @@ readTime: ${readTime}
             return;
           }
 
+          if (
+            typeof body.shopBackgroundColor !== "string" &&
+            typeof body.shopBackgroundColor !== "undefined"
+          ) {
+            res.statusCode = 400;
+            res.end("Invalid payload");
+            return;
+          }
+
           const sanitizedSettings: HomeSettingsRecord = {
             signupBackgroundImageUrl: body.signupBackgroundImageUrl?.trim() || undefined,
             signupBackgroundColor: body.signupBackgroundColor?.trim() || undefined,
             signupButtonColor: body.signupButtonColor?.trim() || undefined,
             portfolioIconUrl: body.portfolioIconUrl?.trim() || undefined,
+            shopBackgroundColor: body.shopBackgroundColor?.trim() || undefined,
           };
 
           await fs.writeFile(

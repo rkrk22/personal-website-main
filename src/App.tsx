@@ -77,6 +77,8 @@ const defaultSignupBackgroundColor = "#455761";
 const defaultSignupButtonColor = "#FFFFFF";
 const defaultShopDevBackgroundColor = "#F3EFE6";
 const shopDevBackgroundStorageKey = "shop-dev-background-color";
+const savedShopBackgroundColor =
+  normalizeHexColor(homeSettings.shopBackgroundColor ?? "") ?? defaultShopDevBackgroundColor;
 
 function normalizeHexColor(value: string) {
   const trimmed = value.trim();
@@ -120,13 +122,13 @@ function getProductCardStyles(cardBackgroundColor?: string) {
   };
 }
 
-function getInitialShopDevBackgroundColor() {
+function getInitialShopBackgroundColor() {
   if (!isLocalEditorEnabled || typeof window === "undefined") {
-    return defaultShopDevBackgroundColor;
+    return savedShopBackgroundColor;
   }
 
   const storedValue = window.localStorage.getItem(shopDevBackgroundStorageKey);
-  return normalizeHexColor(storedValue ?? "") ?? defaultShopDevBackgroundColor;
+  return normalizeHexColor(storedValue ?? "") ?? savedShopBackgroundColor;
 }
 
 function getTagBadgeStyles(kind: string) {
@@ -1281,13 +1283,59 @@ function HomePage() {
 
 export function ShopPage() {
   const [shopProducts, setShopProducts] = useState<Product[]>(products);
-  const [shopBackgroundColor, setShopBackgroundColor] = useState(getInitialShopDevBackgroundColor);
+  const [shopBackgroundColor, setShopBackgroundColor] = useState(getInitialShopBackgroundColor);
+  const [shopBackgroundSaveState, setShopBackgroundSaveState] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const [shopBackgroundSaveMessage, setShopBackgroundSaveMessage] = useState("");
 
   const updateShopBackgroundColor = (value: string) => {
     const normalized = normalizeHexColor(value);
 
     if (normalized) {
       setShopBackgroundColor(normalized);
+      setShopBackgroundSaveState("idle");
+      setShopBackgroundSaveMessage("");
+    }
+  };
+
+  const resetShopBackgroundColor = () => {
+    setShopBackgroundColor(savedShopBackgroundColor);
+    setShopBackgroundSaveState("idle");
+    setShopBackgroundSaveMessage("");
+  };
+
+  const saveShopBackgroundColor = async () => {
+    setShopBackgroundSaveState("saving");
+    setShopBackgroundSaveMessage("");
+
+    try {
+      const response = await fetch("/__save-home-settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          signupBackgroundImageUrl: homeSettings.signupBackgroundImageUrl,
+          signupBackgroundColor: homeSettings.signupBackgroundColor,
+          signupButtonColor: homeSettings.signupButtonColor,
+          portfolioIconUrl: homeSettings.portfolioIconUrl,
+          shopBackgroundColor,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Failed to save shop background");
+      }
+
+      setShopBackgroundSaveState("saved");
+      setShopBackgroundSaveMessage("Saved to src/data/home-settings.ts");
+    } catch (error) {
+      setShopBackgroundSaveState("error");
+      setShopBackgroundSaveMessage(
+        error instanceof Error ? error.message : "Failed to save shop background",
+      );
     }
   };
 
@@ -1372,17 +1420,38 @@ export function ShopPage() {
               <div>
                 <h2 className="text-xl font-semibold tracking-tight">Shop Background</h2>
                 <p className="mt-2 text-base text-muted-foreground">
-                  Dev-only цвет фона вокруг карточек. В проде не показывается.
+                  Цвет фона для всей страницы shop. Редактирование доступно только в dev.
                 </p>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => setShopBackgroundColor(defaultShopDevBackgroundColor)}
-              >
-                <RotateCcw className="h-4 w-4" />
-                Reset
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={resetShopBackgroundColor}>
+                  <RotateCcw className="h-4 w-4" />
+                  Reset
+                </Button>
+                <Button
+                  onClick={saveShopBackgroundColor}
+                  disabled={shopBackgroundSaveState === "saving"}
+                >
+                  {shopBackgroundSaveState === "saving"
+                    ? "Saving..."
+                    : shopBackgroundSaveState === "saved"
+                      ? "Saved"
+                      : "Save"}
+                </Button>
+              </div>
             </div>
+
+            {shopBackgroundSaveMessage ? (
+              <p
+                className={`mt-3 text-sm ${
+                  shopBackgroundSaveState === "error"
+                    ? "text-destructive"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {shopBackgroundSaveMessage}
+              </p>
+            ) : null}
 
             <div className="mt-4 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
               <input
