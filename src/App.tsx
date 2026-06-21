@@ -1307,10 +1307,7 @@ export function ShopPage() {
   }, [shopBackgroundColor]);
 
   return (
-    <div
-      className="min-h-screen"
-      style={isLocalEditorEnabled ? { backgroundColor: shopBackgroundColor } : undefined}
-    >
+    <div className="min-h-screen" style={{ backgroundColor: shopBackgroundColor }}>
       <main className="mx-auto max-w-3xl px-6 pb-24 pt-8 sm:pt-10">
         <a
           href="/"
