@@ -34,6 +34,13 @@ type HomeSettingsRecord = {
   portfolioIconUrl?: string;
 };
 
+type CreateNotePayload = {
+  title?: string;
+  excerpt?: string;
+  readTime?: string;
+  markdown?: string;
+};
+
 function serializeProductsModule(products: ProductRecord[]) {
   const serialized = JSON.stringify(products, null, 2).replace(
     /^(\s*)"([A-Za-z_$][\w$]*)":/gm,
@@ -74,6 +81,35 @@ function serializeHomeSettingsModule(settings: HomeSettingsRecord) {
 
 export const homeSettings: HomeSettings = ${serialized};
 `;
+}
+
+async function readRequestBody<T>(req: NodeJS.ReadableStream) {
+  const chunks: Buffer[] = [];
+
+  for await (const chunk of req) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+
+  return JSON.parse(Buffer.concat(chunks).toString("utf8")) as T;
+}
+
+function slugifyNoteTitle(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/['"]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+function formatNoteDate(date: Date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
 }
 
 function markdownSavePlugin(): PluginOption {
@@ -130,6 +166,65 @@ function markdownSavePlugin(): PluginOption {
             JSON.stringify({
               ok: false,
               error: error instanceof Error ? error.message : "Unknown save error",
+            }),
+          );
+        }
+      });
+
+      server.middlewares.use("/__create-note", async (req, res) => {
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.end("Method Not Allowed");
+          return;
+        }
+
+        try {
+          const body = await readRequestBody<CreateNotePayload>(req);
+          const title = body.title?.trim() || "Untitled";
+          const excerpt = body.excerpt?.trim() || "Draft note.";
+          const readTime = body.readTime?.trim() || "3 min read";
+          const baseSlug = slugifyNoteTitle(title) || "untitled";
+          const existingContentFiles = await fs.readdir(contentDir);
+          const existingSlugs = existingContentFiles
+            .filter((fileName) => fileName.endsWith(".md"))
+            .map((fileName) => fileName.replace(/\.md$/, ""));
+          let slug = baseSlug;
+          let counter = 2;
+
+          while (existingSlugs.includes(slug)) {
+            slug = `${baseSlug}-${counter}`;
+            counter += 1;
+          }
+
+          const markdown =
+            body.markdown?.trim() ||
+            `---
+collection: notes
+title: ${title}
+excerpt: ${excerpt}
+date: ${formatNoteDate(new Date())}
+readTime: ${readTime}
+---
+
+## ${title}
+
+`;
+          const filePath = `src/content/${slug}.md`;
+          const targetPath = path.resolve(rootDir, filePath);
+
+          await fs.writeFile(targetPath, `${markdown}\n`, "utf8");
+
+          server.moduleGraph.invalidateAll();
+
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true, slug }));
+        } catch (error) {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              ok: false,
+              error: error instanceof Error ? error.message : "Unknown create note error",
             }),
           );
         }

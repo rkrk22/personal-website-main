@@ -1,5 +1,5 @@
-import { type ChangeEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Suspense, lazy, type ChangeEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   AlignCenter,
   AlignLeft,
@@ -13,11 +13,13 @@ import {
   Pencil,
   RotateCcw,
   Send,
-  ShoppingBag,
   Youtube,
 } from "lucide-react";
+import { SiteNav } from "@/components/SiteNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MarkdownContent } from "@/components/MarkdownContent";
+import { SiteFooter } from "@/components/SiteFooter";
 import avatar from "@/assets/avatar.jpg";
 import artistPathInGamedevMarkdown from "@/content/artist-path-in-gamedev.md?raw";
 import bookGameArtGuidebookMarkdown from "@/content/book-game-art-guidebook.md?raw";
@@ -25,20 +27,13 @@ import gamedevArtistBundleMarkdown from "@/content/gamedev-artist-bundle.md?raw"
 import digitalArtistSurvivalKitMarkdown from "@/content/digital-artist-survival-kit.md?raw";
 import { homeSettings } from "@/data/home-settings";
 import { type Product, products } from "@/data/products";
+import { usePageMeta } from "@/lib/page-meta";
 import {
   type ImageAlignment,
   formatImageBlock,
-  markdownToHtml,
   parseImageBlock,
 } from "@/lib/markdown";
 import { cn } from "@/lib/utils";
-
-type MetaDefinition = {
-  title: string;
-  description: string;
-  ogTitle?: string;
-  ogDescription?: string;
-};
 
 type LegalSection = {
   heading: string;
@@ -59,31 +54,6 @@ type PendingTextareaRestore = {
   windowScrollY: number;
 };
 
-function usePageMeta({ title, description, ogTitle, ogDescription }: MetaDefinition) {
-  useEffect(() => {
-    document.title = title;
-
-    const upsertMeta = (selector: string, attributes: Record<string, string>, content: string) => {
-      let element = document.head.querySelector<HTMLMetaElement>(selector);
-
-      if (!element) {
-        element = document.createElement("meta");
-        Object.entries(attributes).forEach(([key, value]) => element!.setAttribute(key, value));
-        document.head.appendChild(element);
-      }
-
-      element.setAttribute("content", content);
-    };
-
-    upsertMeta('meta[name="description"]', { name: "description" }, description);
-    upsertMeta('meta[property="og:title"]', { property: "og:title" }, ogTitle ?? title);
-    upsertMeta(
-      'meta[property="og:description"]',
-      { property: "og:description" },
-      ogDescription ?? description,
-    );
-  }, [description, ogDescription, ogTitle, title]);
-}
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -105,6 +75,8 @@ const portfolioHref = "https://www.behance.net/ruslankim";
 const portfolioCardStyles = getProductCardStyles("#F7F7F7");
 const defaultSignupBackgroundColor = "#455761";
 const defaultSignupButtonColor = "#FFFFFF";
+const defaultShopDevBackgroundColor = "#F3EFE6";
+const shopDevBackgroundStorageKey = "shop-dev-background-color";
 
 function normalizeHexColor(value: string) {
   const trimmed = value.trim();
@@ -146,6 +118,15 @@ function getProductCardStyles(cardBackgroundColor?: string) {
     mutedColor: hexToRgba(textColor, 0.76),
     textColor,
   };
+}
+
+function getInitialShopDevBackgroundColor() {
+  if (!isLocalEditorEnabled || typeof window === "undefined") {
+    return defaultShopDevBackgroundColor;
+  }
+
+  const storedValue = window.localStorage.getItem(shopDevBackgroundStorageKey);
+  return normalizeHexColor(storedValue ?? "") ?? defaultShopDevBackgroundColor;
 }
 
 function getTagBadgeStyles(kind: string) {
@@ -403,7 +384,7 @@ function ProductCard({
       </div>
       <div className="flex-1 text-left">
         <div
-          className="flex h-24 items-center gap-3 rounded-2xl px-4 py-3"
+          className="flex h-24 items-center gap-3 rounded-[1.2rem] px-4 py-3"
           style={
             cardStyles
               ? {
@@ -477,7 +458,7 @@ function ShopProductCard({
       </div>
       <div className="flex-1 text-left">
         <div
-          className="flex items-center gap-4 rounded-[1.6rem] px-5 py-5"
+          className="flex items-center gap-4 rounded-[1.2rem] px-5 py-5"
           style={
             cardStyles
               ? {
@@ -548,7 +529,7 @@ function ProductTile({
         )}
       </div>
       <div
-        className="mt-8 flex flex-1 flex-col rounded-[1.6rem] px-5 py-5"
+        className="mt-8 flex flex-1 flex-col rounded-[1.2rem] px-5 py-5"
         style={
           cardStyles
             ? {
@@ -926,14 +907,6 @@ function SignupBackgroundEditor({
   );
 }
 
-function MarkdownContent({ markdown }: { markdown: string }) {
-  return (
-    <article className="markdown-content rounded-3xl border border-border bg-card px-8 pb-8 pt-0 sm:px-10 sm:pb-10 sm:pt-0">
-      <div dangerouslySetInnerHTML={{ __html: markdownToHtml(markdown) }} />
-    </article>
-  );
-}
-
 function ScrollToTop() {
   const location = useLocation();
 
@@ -942,22 +915,6 @@ function ScrollToTop() {
   }, [location.pathname]);
 
   return null;
-}
-
-function SiteFooter() {
-  return (
-    <footer className="mt-16 flex flex-col items-center gap-3 text-center text-sm text-muted-foreground">
-      <div className="flex items-center gap-4">
-        <a href="/privacy-policy" className="transition-colors hover:text-foreground">
-          Политика конфиденциальности
-        </a>
-        <a href="/terms-of-service" className="transition-colors hover:text-foreground">
-          Условия использования
-        </a>
-      </div>
-      <div>© {new Date().getFullYear()} Ruslan Kim</div>
-    </footer>
-  );
 }
 
 function LegalPage({
@@ -1150,18 +1107,10 @@ function HomePage() {
   });
 
   return (
-    <main className="mx-auto max-w-xl px-6 pb-24 pt-16 sm:pt-20">
-      <div className="flex justify-end">
-        <a
-          href="/shop/"
-          className="inline-flex items-center gap-2 rounded-full border border-transparent bg-amber-200 px-4 py-2 text-sm font-medium text-stone-900 transition-all hover:bg-amber-300 hover:shadow-sm"
-        >
-          <ShoppingBag className="h-4 w-4" />
-          Shop
-        </a>
-      </div>
-
-      <section className="flex flex-col items-center text-center">
+    <>
+      <SiteNav />
+      <main className="mx-auto max-w-xl px-6 pb-24 pt-6 sm:pt-8">
+        <section className="flex flex-col items-center text-center">
         <img
           src={avatar}
           alt="Ruslan Kim"
@@ -1188,151 +1137,159 @@ function HomePage() {
             </a>
           ))}
         </div>
-      </section>
+        </section>
 
-      <section className="mt-12">
-        <div className="space-y-3">
-          {featuredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              title={product.homeTitle ?? product.title}
-              subtitle={product.homeSubtitle ?? product.subtitle}
-              href={product.href}
-              kind={product.kind}
-              iconUrl={product.iconUrl}
-              cardBackgroundColor={product.cardBackgroundColor}
-              ribbonLabel={product.ribbonLabel}
-            />
-          ))}
-        </div>
-
-        <a
-          href={portfolioHref}
-          target="_blank"
-          rel="noreferrer"
-          className="group relative mt-3 flex min-h-[9rem] items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
-        >
-          <ExternalSiteIcon
-            href={portfolioHref}
-            fallback="P"
-            iconUrlOverride={portfolioIconUrl}
-            imageClassName="h-56 w-56"
-          />
-          <div className="flex-1 text-left">
-            <div
-              className="flex h-24 items-center gap-3 px-4 py-3"
-              style={
-                portfolioCardStyles
-                  ? {
-                      color: portfolioCardStyles.textColor,
-                    }
-                  : undefined
-              }
-            >
-              <div className="min-w-0 flex-1">
-                <div className="break-words text-lg leading-tight font-semibold tracking-tight">
-                  Портфолио
-                </div>
-                <div
-                  className="mt-0.5 break-words text-[15px] leading-tight text-muted-foreground"
-                  style={
-                    portfolioCardStyles ? { color: portfolioCardStyles.mutedColor } : undefined
-                  }
-                >
-                  Если вам интересно посмотреть на мои работы
-                </div>
-              </div>
-              <ArrowRight
-                className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
-                style={portfolioCardStyles ? { color: portfolioCardStyles.kindColor } : undefined}
+        <section className="mt-12">
+          <div className="space-y-3">
+            {featuredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                title={product.homeTitle ?? product.title}
+                subtitle={product.homeSubtitle ?? product.subtitle}
+                href={product.href}
+                kind={product.kind}
+                iconUrl={product.iconUrl}
+                cardBackgroundColor={product.cardBackgroundColor}
+                ribbonLabel={product.ribbonLabel}
               />
-            </div>
+            ))}
           </div>
-        </a>
-        {isLocalEditorEnabled ? (
-          <PortfolioIconEditor
-            value={portfolioIconUrl}
-            signupBackgroundImageUrl={signupBackgroundImageUrl}
-            signupBackgroundColor={signupBackgroundColor}
-            signupButtonColor={signupButtonColor}
-            onChange={setPortfolioIconUrl}
-          />
-        ) : null}
-      </section>
 
-      <section className="mt-10">
-        <div className="space-y-4">
-          <div className="relative overflow-hidden rounded-2xl bg-[oklch(0.34_0.025_235)] px-6 py-5 text-white sm:px-10 sm:py-6">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
-              style={{
-                backgroundColor:
-                  normalizeHexColor(signupBackgroundColor) ?? defaultSignupBackgroundColor,
-              }}
+          <a
+            href={portfolioHref}
+            target="_blank"
+            rel="noreferrer"
+            className="group relative mt-3 flex min-h-[9rem] items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 transition-all hover:border-foreground/30 hover:shadow-sm"
+          >
+            <ExternalSiteIcon
+              href={portfolioHref}
+              fallback="P"
+              iconUrlOverride={portfolioIconUrl}
+              imageClassName="h-56 w-56"
             />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
-              style={{
-                backgroundImage: `linear-gradient(180deg, ${hexToRgba(signupBackgroundColor, 0)}, ${hexToRgba(signupBackgroundColor, 0)})`,
-              }}
-            />
-            <div className="relative grid gap-4 md:min-h-[15.5rem] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-0">
-              <div className="relative z-10 min-w-0 text-left">
-                <h2 className="text-[1.4rem] font-semibold tracking-tight text-black">
-                  <span className="leading-[1.05]">
-                  У меня есть рассылка
-                  </span>
-                </h2>
-                <p className="mt-2 text-[15px] leading-snug text-black">
-                  Если подпишетесь, то мы с вами никогда не потеряемся из виду. Я буду присылать
-                  вам полезности для художников, давать поддержку и иногда предлагать скидки 💛
-                </p>
-                <a
-                  href="/signup/"
-                  className="mt-5 inline-flex items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
-                  style={{
-                    backgroundColor:
-                      normalizeHexColor(signupButtonColor) ?? defaultSignupButtonColor,
-                    color: getContrastingTextColor(signupButtonColor),
-                  }}
-                >
-                  Sign up
-                </a>
-              </div>
-              {signupBackgroundImageUrl ? (
-                <div className="flex justify-center md:-mr-12 md:-ml-10 md:justify-end">
-                  <img
-                    aria-hidden="true"
-                    alt=""
-                    src={signupBackgroundImageUrl}
-                    className="h-52 w-full min-w-[17rem] max-w-[19rem] object-contain md:h-[15rem] md:w-[16.5rem] md:max-w-none"
-                  />
+            <div className="flex-1 text-left">
+              <div
+                className="flex h-24 items-center gap-3 px-4 py-3"
+                style={
+                  portfolioCardStyles
+                    ? {
+                        color: portfolioCardStyles.textColor,
+                      }
+                    : undefined
+                }
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="break-words text-lg leading-tight font-semibold tracking-tight">
+                    Портфолио
+                  </div>
+                  <div
+                    className="mt-0.5 break-words text-[15px] leading-tight text-muted-foreground"
+                    style={
+                      portfolioCardStyles ? { color: portfolioCardStyles.mutedColor } : undefined
+                    }
+                  >
+                    Если вам интересно посмотреть на мои работы
+                  </div>
                 </div>
-              ) : null}
+                <ArrowRight
+                  className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+                  style={portfolioCardStyles ? { color: portfolioCardStyles.kindColor } : undefined}
+                />
+              </div>
             </div>
-          </div>
+          </a>
           {isLocalEditorEnabled ? (
-            <SignupBackgroundEditor
-              value={signupBackgroundImageUrl}
-              color={signupBackgroundColor}
-              buttonColor={signupButtonColor}
-              onChange={setSignupBackgroundImageUrl}
-              onColorChange={setSignupBackgroundColor}
-              onButtonColorChange={setSignupButtonColor}
+            <PortfolioIconEditor
+              value={portfolioIconUrl}
+              signupBackgroundImageUrl={signupBackgroundImageUrl}
+              signupBackgroundColor={signupBackgroundColor}
+              signupButtonColor={signupButtonColor}
+              onChange={setPortfolioIconUrl}
             />
           ) : null}
-        </div>
-      </section>
+        </section>
 
-      <SiteFooter />
-    </main>
+        <section className="mt-10">
+          <div className="space-y-4">
+            <div className="relative overflow-hidden rounded-2xl bg-[oklch(0.34_0.025_235)] px-6 py-5 text-white sm:px-10 sm:py-6">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  backgroundColor:
+                    normalizeHexColor(signupBackgroundColor) ?? defaultSignupBackgroundColor,
+                }}
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  backgroundImage: `linear-gradient(180deg, ${hexToRgba(signupBackgroundColor, 0)}, ${hexToRgba(signupBackgroundColor, 0)})`,
+                }}
+              />
+              <div className="relative grid gap-4 md:min-h-[15.5rem] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-0">
+                <div className="relative z-10 min-w-0 text-left">
+                  <h2 className="text-[1.4rem] font-semibold tracking-tight text-black">
+                    <span className="leading-[1.05]">У меня есть рассылка</span>
+                  </h2>
+                  <p className="mt-2 text-[15px] leading-snug text-black">
+                    Подпишитесь и мы с вами никогда не потеряемся из виду. Я буду присылать вам
+                    полезности для художников, давать поддержку и иногда предлагать скидки 💛
+                  </p>
+                  <a
+                    href="/signup/"
+                    className="mt-5 inline-flex items-center justify-center rounded-md px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
+                    style={{
+                      backgroundColor:
+                        normalizeHexColor(signupButtonColor) ?? defaultSignupButtonColor,
+                      color: getContrastingTextColor(signupButtonColor),
+                    }}
+                  >
+                    Sign up
+                  </a>
+                </div>
+                {signupBackgroundImageUrl ? (
+                  <div className="flex justify-center md:-mr-12 md:-ml-10 md:justify-end">
+                    <img
+                      aria-hidden="true"
+                      alt=""
+                      src={signupBackgroundImageUrl}
+                      className="h-52 w-full min-w-[17rem] max-w-[19rem] object-contain md:h-[15rem] md:w-[16.5rem] md:max-w-none"
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            {isLocalEditorEnabled ? (
+              <SignupBackgroundEditor
+                value={signupBackgroundImageUrl}
+                color={signupBackgroundColor}
+                buttonColor={signupButtonColor}
+                onChange={setSignupBackgroundImageUrl}
+                onColorChange={setSignupBackgroundColor}
+                onButtonColorChange={setSignupButtonColor}
+              />
+            ) : null}
+          </div>
+        </section>
+
+        <SiteFooter />
+      </main>
+    </>
   );
 }
 
 export function ShopPage() {
   const [shopProducts, setShopProducts] = useState<Product[]>(products);
+  const [shopBackgroundColor, setShopBackgroundColor] = useState(getInitialShopDevBackgroundColor);
+
+  const updateShopBackgroundColor = (value: string) => {
+    const normalized = normalizeHexColor(value);
+
+    if (normalized) {
+      setShopBackgroundColor(normalized);
+    }
+  };
 
   usePageMeta({
     title: "Shop — Ruslan Kim",
@@ -1341,71 +1298,118 @@ export function ShopPage() {
     ogDescription: "Browse books, products, and resources by Ruslan Kim.",
   });
 
+  useEffect(() => {
+    if (!isLocalEditorEnabled) {
+      return;
+    }
+
+    window.localStorage.setItem(shopDevBackgroundStorageKey, shopBackgroundColor);
+  }, [shopBackgroundColor]);
+
   return (
-    <main className="mx-auto max-w-3xl px-6 pb-24 pt-8 sm:pt-10">
-      <a
-        href="/"
-        className="inline-flex items-center gap-2 text-base text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to home
-      </a>
+    <div
+      className="min-h-screen"
+      style={isLocalEditorEnabled ? { backgroundColor: shopBackgroundColor } : undefined}
+    >
+      <main className="mx-auto max-w-3xl px-6 pb-24 pt-8 sm:pt-10">
+        <a
+          href="/"
+          className="inline-flex items-center gap-2 text-base text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to home
+        </a>
 
-      <section className="mt-5">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Shop</h1>
-        <p className="mt-2 text-base text-muted-foreground sm:text-lg">
-          Books, products, and resources in one place.
-        </p>
-      </section>
+        <section className="mt-5">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Shop</h1>
+          <p className="mt-2 text-base text-muted-foreground sm:text-lg">
+            Books, products, and resources in one place.
+          </p>
+        </section>
 
-      <section className="mt-5 grid gap-4 sm:grid-cols-2">
-        {shopProducts.map((product) =>
-          product.kind === "Курс" || product.id === "gamedev-artist-bundle" ? (
-            <div key={product.id} className="sm:col-span-2">
-              <div className="shop-course-card-portrait">
-                <ProductTile
-                  title={product.title}
-                  subtitle={product.description}
-                  href={product.href}
-                  kind={product.kind}
-                  iconUrl={product.iconUrl}
-                  cardBackgroundColor={product.cardBackgroundColor}
-                  ribbonLabel={product.ribbonLabel}
-                />
+        <section className="mt-5 grid gap-4 sm:grid-cols-2">
+          {shopProducts.map((product) =>
+            product.kind === "Курс" || product.id === "gamedev-artist-bundle" ? (
+              <div key={product.id} className="sm:col-span-2">
+                <div className="shop-course-card-portrait">
+                  <ProductTile
+                    title={product.title}
+                    subtitle={product.description}
+                    href={product.href}
+                    kind={product.kind}
+                    iconUrl={product.iconUrl}
+                    cardBackgroundColor={product.cardBackgroundColor}
+                    ribbonLabel={product.ribbonLabel}
+                  />
+                </div>
+                <div className="shop-course-card-default">
+                  <ShopProductCard
+                    title={product.title}
+                    subtitle={product.description}
+                    href={product.href}
+                    kind={product.kind}
+                    iconUrl={product.iconUrl}
+                    cardBackgroundColor={product.cardBackgroundColor}
+                    ribbonLabel={product.ribbonLabel}
+                  />
+                </div>
               </div>
-              <div className="shop-course-card-default">
-                <ShopProductCard
-                  title={product.title}
-                  subtitle={product.description}
-                  href={product.href}
-                  kind={product.kind}
-                  iconUrl={product.iconUrl}
-                  cardBackgroundColor={product.cardBackgroundColor}
-                  ribbonLabel={product.ribbonLabel}
-                />
+            ) : (
+              <ProductTile
+                key={product.id}
+                title={product.title}
+                subtitle={product.description}
+                href={product.href}
+                kind={product.kind}
+                iconUrl={product.iconUrl}
+                cardBackgroundColor={product.cardBackgroundColor}
+                ribbonLabel={product.ribbonLabel}
+              />
+            ),
+          )}
+        </section>
+
+        {isLocalEditorEnabled ? (
+          <section className="mt-6 rounded-3xl border border-border bg-card p-6 sm:p-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight">Shop Background</h2>
+                <p className="mt-2 text-base text-muted-foreground">
+                  Dev-only цвет фона вокруг карточек. В проде не показывается.
+                </p>
               </div>
+              <Button
+                variant="outline"
+                onClick={() => setShopBackgroundColor(defaultShopDevBackgroundColor)}
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset
+              </Button>
             </div>
-          ) : (
-            <ProductTile
-              key={product.id}
-              title={product.title}
-              subtitle={product.description}
-              href={product.href}
-              kind={product.kind}
-              iconUrl={product.iconUrl}
-              cardBackgroundColor={product.cardBackgroundColor}
-              ribbonLabel={product.ribbonLabel}
-            />
-          ),
-        )}
-      </section>
 
-      {isLocalEditorEnabled ? (
-        <ProductIconEditor draftProducts={shopProducts} onChange={setShopProducts} />
-      ) : null}
+            <div className="mt-4 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+              <input
+                type="color"
+                value={shopBackgroundColor}
+                onChange={(event) => updateShopBackgroundColor(event.target.value)}
+                className="h-10 w-16 cursor-pointer rounded-md border border-input bg-transparent p-1"
+              />
+              <Input
+                value={shopBackgroundColor}
+                onChange={(event) => updateShopBackgroundColor(event.target.value)}
+                placeholder={defaultShopDevBackgroundColor}
+              />
+            </div>
+          </section>
+        ) : null}
 
-      <SiteFooter />
-    </main>
+        {isLocalEditorEnabled ? (
+          <ProductIconEditor draftProducts={shopProducts} onChange={setShopProducts} />
+        ) : null}
+
+        <SiteFooter />
+      </main>
+    </div>
   );
 }
 
@@ -2064,43 +2068,59 @@ function NotFoundPage() {
   );
 }
 
+const NotesPage = lazy(async () => {
+  const module = await import("./notes-page");
+  return { default: module.default };
+});
+
+const NotePage = lazy(async () => {
+  const module = await import("./note-page");
+  return { default: module.default };
+});
+
 export function App() {
   return (
     <>
       <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/shop/" element={<ShopPage />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-        <Route path="/artist-kit" element={<BookPage productSlug="artist-kit" />} />
-        <Route path="/artist-kit/" element={<BookPage productSlug="artist-kit" />} />
-        <Route
-          path="/bundles/gamedev-artist"
-          element={<BookPage productSlug="gamedev-artist-bundle" />}
-        />
-        <Route
-          path="/bundles/gamedev-artist/"
-          element={<BookPage productSlug="gamedev-artist-bundle" />}
-        />
-        <Route
-          path="/books/game-art-guidebook"
-          element={<BookPage productSlug="game-art-guidebook" />}
-        />
-        <Route
-          path="/books/game-art-guidebook/"
-          element={<BookPage productSlug="game-art-guidebook" />}
-        />
-        <Route
-          path="/courses/artist-path-in-gamedev"
-          element={<BookPage productSlug="artist-path-in-gamedev" />}
-        />
-        <Route
-          path="/courses/artist-path-in-gamedev/"
-          element={<BookPage productSlug="artist-path-in-gamedev" />}
-        />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/notes" element={<NotesPage />} />
+          <Route path="/notes/" element={<NotesPage />} />
+          <Route path="/notes/:slug" element={<NotePage />} />
+          <Route path="/notes/:slug/" element={<NotePage />} />
+          <Route path="/shop/" element={<ShopPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route path="/artist-kit" element={<BookPage productSlug="artist-kit" />} />
+          <Route path="/artist-kit/" element={<BookPage productSlug="artist-kit" />} />
+          <Route
+            path="/bundles/gamedev-artist"
+            element={<BookPage productSlug="gamedev-artist-bundle" />}
+          />
+          <Route
+            path="/bundles/gamedev-artist/"
+            element={<BookPage productSlug="gamedev-artist-bundle" />}
+          />
+          <Route
+            path="/books/game-art-guidebook"
+            element={<BookPage productSlug="game-art-guidebook" />}
+          />
+          <Route
+            path="/books/game-art-guidebook/"
+            element={<BookPage productSlug="game-art-guidebook" />}
+          />
+          <Route
+            path="/courses/artist-path-in-gamedev"
+            element={<BookPage productSlug="artist-path-in-gamedev" />}
+          />
+          <Route
+            path="/courses/artist-path-in-gamedev/"
+            element={<BookPage productSlug="artist-path-in-gamedev" />}
+          />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }
