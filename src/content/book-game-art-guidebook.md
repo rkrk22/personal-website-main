@@ -1,6 +1,8 @@
 https://ik.imagekit.io/71jz3gcgav/book_icons_all_nK58XFLPK.gif {width=53 align=center}
 
 # Game Art Guidebook
+Формат книги: доступ к Notion странице 
+
 Несколько лет назад я начал создавать свою книгу-гайд по игровому арту. 
 
 **Почему так долго ее делаю?** 
